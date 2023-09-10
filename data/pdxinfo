@@ -1,0 +1,5 @@
+name=Play-Factory
+author=Taylor Robbins
+description=A simple factory game
+bundleID=com.piggybankstudios.playfactory
+imagePath=

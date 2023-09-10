@@ -1,0 +1,75 @@
+{
+	"folders":
+	[
+		{
+			"path": ".",
+			"folder_exclude_patterns":
+			[
+				"build",
+				"lib",
+				".vs",
+				"Debug",
+				"engine",
+			],
+		},
+		{
+			"name": "PigEngine",
+			"path": "engine/platform/playdate",
+		},
+		{
+			"name": "GyLib",
+			"path": "lib/include/gylib",
+		},
+		{
+			"path": "build",
+			"folder_exclude_patterns":
+			[
+				".vs",
+				"*.pdx",
+			],
+			"file_exclude_patterns":
+			[
+				"*.exp",
+				"*.map",
+				"*.obj",
+				"*.ilk",
+				"*.manifest",
+				"preprocessed_output.txt",
+			],
+		},
+		{
+			"path": "C:\\Users\\robbitay\\Documents\\MyStuff\\Programs\\PlaydateSDK",
+			"folder_exclude_patterns":
+			[
+				".sentry-native",
+				"bin",
+				"Designing for Playdate",
+				"Disk",
+				"Inside Playdate",
+				"PlaydateSDK.docset",
+				"resources",
+				"C_API/buildsupport",
+				"CoreLibs/assets",
+			],
+			"file_exclude_patterns":
+			[
+				"*.html",
+				"*.css",
+			],
+		},
+	],
+	"settings":
+	{
+		"build_options":
+		[
+		],
+		"custom_constants":
+		[],
+		"custom_functions":
+		[],
+		"custom_globals":
+		[],
+		"custom_types":
+		[],
+	},
+}
