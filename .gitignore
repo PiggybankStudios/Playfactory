@@ -4,3 +4,5 @@ build/*
 data/pdex.dll
 lib/include/gylib/
 engine/
+release/*
+!release/screenshots/
