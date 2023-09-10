@@ -38,6 +38,9 @@ AppState_t InitGame()
 	ClearPointer(gl);
 	gl->initialized = true;
 	
+	gl->titleFont = LoadFont(NewStr("Resources/Fonts/SpaceContract"));
+	Assert(gl->titleFont.isValid);
+	
 	return FIRST_APP_STATE;
 }
 

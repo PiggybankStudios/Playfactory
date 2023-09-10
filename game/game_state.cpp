@@ -18,14 +18,6 @@ void StartAppState_Game(bool initialize, AppState_t prevState, MyStr_t transitio
 		game->mainFont = LoadFont(NewStr(MAIN_FONT_PATH));
 		Assert(game->mainFont.isValid);
 		
-		game->testSheet = LoadSpriteSheet(NewStr("Resources/Sheets/test"), 5);
-		Assert(game->testSheet.isValid);
-		PrintLine_D("testSheet: (%d, %d) frames, each %dx%d", game->testSheet.numFramesX, game->testSheet.numFramesY, game->testSheet.frameSize.width, game->testSheet.frameSize.height);
-		game->testSheetFrame = NewVec2i(game->testSheet.numFramesX-1, game->testSheet.numFramesY-1);
-		
-		game->backgroundTexture = LoadTexture(NewStr("Resources/Textures/background"));
-		Assert(game->backgroundTexture.isValid);
-		
 		game->pigTexture = LoadTexture(NewStr("Resources/Sprites/pig64"));
 		Assert(game->pigTexture.isValid);
 		
@@ -71,16 +63,6 @@ void UpdateAppState_Game()
 	{
 		HandleBtnExtended(Btn_A);
 		game->isInverted = !game->isInverted;
-		game->testSheetFrame.x++;
-		if (game->testSheetFrame.x >= game->testSheet.numFramesX)
-		{
-			game->testSheetFrame.x = 0;
-			game->testSheetFrame.y++;
-			if (game->testSheetFrame.y >= game->testSheet.numFramesY)
-			{
-				game->testSheetFrame.y = 0;
-			}
-		}
 	}
 	if (BtnPressed(Btn_B))
 	{
@@ -127,7 +109,11 @@ void RenderAppState_Game(bool isOnTop)
 	pd->graphics->clear(game->isInverted ? kColorBlack : kColorWhite);
 	PdSetDrawMode(game->isInverted ? kDrawModeInverted : kDrawModeCopy);
 	
-	PdDrawTexturedRec(game->backgroundTexture, NewReci(0, 0, ScreenSize));
+	MyStr_t gameTitleStr = NewStr(PROJECT_NAME);
+	v2i gameTitleSize = MeasureText(gl->titleFont.font, gameTitleStr);
+	v2i gameTitlePos = NewVec2i(ScreenSize.width/2 - gameTitleSize.width/2, ScreenSize.height/4 - gameTitleSize.height/2);
+	PdBindFont(&gl->titleFont);
+	PdDrawText(gameTitleStr, gameTitlePos);
 	
 	reci pigIconRec = NewReci(Vec2Roundi(game->pigPos), game->pigTexture.size);
 	v2i pigEngineTextPos = pigIconRec.topLeft + NewVec2i(0, pigIconRec.height);
@@ -136,12 +122,6 @@ void RenderAppState_Game(bool isOnTop)
 	PdDrawText(game->pigEngineText, pigEngineTextPos);
 	pd->graphics->setDrawMode(oldDrawMode);
 	PdDrawTexturedRec(game->pigTexture, pigIconRec);
-	
-	v2i testFramePos = NewVec2i(
-		ScreenSize.width/2 - game->testSheet.frameSize.width/2,
-		ScreenSize.height/2 - game->testSheet.frameSize.height/2
-	);
-	PdDrawSheetFrame(game->testSheet, game->testSheetFrame, testFramePos);
 	
 	if (pig->debugEnabled)
 	{

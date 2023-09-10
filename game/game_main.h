@@ -12,6 +12,8 @@ Date:   09\10\2023
 struct GameGlobals_t
 {
 	bool initialized;
+	
+	Font_t titleFont;
 };
 
 #endif //  _GAME_MAIN_H
