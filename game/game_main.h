@@ -7,7 +7,7 @@ Date:   09\10\2023
 #ifndef _GAME_MAIN_H
 #define _GAME_MAIN_H
 
-#define FIRST_APP_STATE AppState_Game
+#define FIRST_APP_STATE AppState_MainMenu
 
 struct GameGlobals_t
 {
