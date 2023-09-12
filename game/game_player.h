@@ -22,6 +22,7 @@ struct Player_t
 	v2 lookVec;
 	Dir2Ex_t inputDir;
 	Dir2Ex_t rotation;
+	Inventory_t inventory;
 };
 
 #endif //  _GAME_PLAYER_H

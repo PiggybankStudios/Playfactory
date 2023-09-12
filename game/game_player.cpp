@@ -11,7 +11,7 @@ void FreePlayer(Player_t* player)
 	NotNull(player);
 	if (player->allocArena != nullptr)
 	{
-		//TODO: Implement me!
+		FreeInventory(&player->inventory);
 	}
 	ClearPointer(player);
 }
@@ -24,17 +24,22 @@ void InitPlayer(Player_t* player, MemArena_t* memArena, v2 startPos)
 	player->position = startPos;
 	player->velocity = Vec2_Zero;
 	player->rotation = Dir2Ex_Down;
+	InitInventory(&player->inventory, player->allocArena, InvType_PlayerInventory);
 }
 
 void UpdatePlayer(Player_t* player, World_t* world)
 {
 	NotNull4(player, player->allocArena, world, world->allocArena);
+	bool isInventoryOpen = (game->openInventory != nullptr);
 	
 	u8 inputDirFlags = Dir2_None;
-	if (BtnDown(Btn_Right)) { HandleBtn(Btn_Right); inputDirFlags |= Dir2_Right; }
-	if (BtnDown(Btn_Left))  { HandleBtn(Btn_Left);  inputDirFlags |= Dir2_Left;  }
-	if (BtnDown(Btn_Up))    { HandleBtn(Btn_Up);    inputDirFlags |= Dir2_Up;    }
-	if (BtnDown(Btn_Down))  { HandleBtn(Btn_Down);  inputDirFlags |= Dir2_Down;  }
+	if (!isInventoryOpen)
+	{
+		if (BtnDown(Btn_Right)) { HandleBtn(Btn_Right); inputDirFlags |= Dir2_Right; }
+		if (BtnDown(Btn_Left))  { HandleBtn(Btn_Left);  inputDirFlags |= Dir2_Left;  }
+		if (BtnDown(Btn_Up))    { HandleBtn(Btn_Up);    inputDirFlags |= Dir2_Up;    }
+		if (BtnDown(Btn_Down))  { HandleBtn(Btn_Down);  inputDirFlags |= Dir2_Down;  }
+	}
 	player->inputDir = Dir2ExFromDir2Flags(inputDirFlags);
 	if (player->inputDir != Dir2Ex_None)
 	{

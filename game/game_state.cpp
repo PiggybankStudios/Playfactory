@@ -8,6 +8,8 @@ Description:
 
 GameState_t* game = nullptr;
 
+#include "game_inv_types.cpp"
+#include "game_inventory.cpp"
 #include "game_view.cpp"
 #include "game_world.cpp"
 #include "game_player.cpp"
@@ -32,6 +34,8 @@ void StartAppState_Game(bool initialize, AppState_t prevState, MyStr_t transitio
 		Assert(game->kennySheet.isValid);
 		game->playerSheet = LoadSpriteSheet(NewStr("Resources/Sheets/player"), 6);
 		Assert(game->playerSheet.isValid);
+		game->entitiesSheet = LoadSpriteSheet(NewStr("Resources/Sheets/entities"), 8);
+		Assert(game->entitiesSheet.isValid);
 		
 		InitWorld(&game->world, mainHeap, DEFAULT_WORLD_SIZE, DEFAULT_WORLD_SEED);
 		InitPlayer(&game->player, mainHeap, ToVec2(game->world.pixelSize) / 2.0f);
@@ -77,10 +81,17 @@ void UpdateAppState_Game()
 	// +==============================+
 	// |            Btn_B             |
 	// +==============================+
-	if (BtnPressed(Btn_B))
+	if (BtnReleased(Btn_B))
 	{
-		HandleBtnExtended(Btn_B);
-		//TODO: Implement me!
+		HandleBtn(Btn_B);
+		if (game->openInventory == nullptr)
+		{
+			game->openInventory = &game->player.inventory;
+		}
+		else
+		{
+			game->openInventory = nullptr;
+		}
 	}
 	
 	FreeScratchArena(scratch);
@@ -106,6 +117,14 @@ void RenderAppState_Game(bool isOnTop)
 		RenderPlayer(&game->player);
 		
 		PdSetRenderOffset(Vec2i_Zero);
+	}
+	
+	// +==============================+
+	// |      Render Inventories      |
+	// +==============================+
+	if (game->openInventory != nullptr)
+	{
+		RenderInventoryUi(game->openInventory);
 	}
 	
 	// +==============================+

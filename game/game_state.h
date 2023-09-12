@@ -12,6 +12,9 @@ Date:   09\08\2023
 #define DEFAULT_WORLD_SEED   1
 
 #include "game_tile_types.h"
+#include "game_item_ids.h"
+#include "game_inv_types.h"
+#include "game_inventory.h"
 #include "game_view.h"
 #include "game_world.h"
 #include "game_player.h"
@@ -25,10 +28,13 @@ struct GameState_t
 	Sound_t testSound;
 	SpriteSheet_t kennySheet;
 	SpriteSheet_t playerSheet;
+	SpriteSheet_t entitiesSheet;
 	
 	GameView_t view;
 	Player_t player;
 	World_t world;
+	
+	Inventory_t* openInventory;
 };
 
 #endif //  _GAME_H
