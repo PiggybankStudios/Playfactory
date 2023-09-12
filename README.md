@@ -2,7 +2,8 @@
 A simple factory game for Playdate (Built using Pig Engine) 
 
 ## Screenshots
-![Screenshot1](/release/screenshots/screenshot1.png)
+![Screenshot2](/release/screenshots/screenshot2.png)
+![Screenshot3](/release/screenshots/screenshot3.png)
 
 ## Building (Windows Playdate Simulator)
 1. Install Visual Studio 2022 (the build.bat later will expect it to be installed in the default location, and have C/C++ compiler features installed)
