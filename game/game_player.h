@@ -23,6 +23,7 @@ struct Player_t
 	Dir2Ex_t inputDir;
 	Dir2Ex_t rotation;
 	Inventory_t inventory;
+	Inventory_t scienceInventory;
 };
 
 #endif //  _GAME_PLAYER_H

@@ -35,6 +35,7 @@ struct GameState_t
 	World_t world;
 	
 	Inventory_t* openInventory;
+	Inventory_t* openScrollInventory;
 };
 
 #endif //  _GAME_H

@@ -65,6 +65,30 @@ void UpdateAppState_Game()
 {
 	MemArena_t* scratch = GetScratchArena();
 	
+	// +==============================+
+	// |            Btn_B             |
+	// +==============================+
+	if (BtnReleased(Btn_B))
+	{
+		HandleBtn(Btn_B);
+		if (game->openInventory == nullptr && game->openScrollInventory == nullptr)
+		{
+			game->openInventory = &game->player.scienceInventory; OnOpenInventory(game->openInventory, false);
+			game->openScrollInventory = &game->player.inventory; OnOpenInventory(game->openScrollInventory, true);
+		}
+		else
+		{
+			game->openInventory = nullptr;
+			game->openScrollInventory = nullptr;
+		}
+	}
+	
+	// +==============================+
+	// |   Update Open Inventories    |
+	// +==============================+
+	if (game->openInventory != nullptr) { UpdateInventory(game->openInventory); }
+	if (game->openScrollInventory != nullptr) { UpdateInventory(game->openScrollInventory); }
+	
 	UpdatePlayer(&game->player, &game->world);
 	UpdateGameView(&game->view, game->player.position, ToVec2(game->player.inputDir), game->world.size * TILE_SIZE);
 	UpdateWorld(&game->world);
@@ -76,22 +100,6 @@ void UpdateAppState_Game()
 	{
 		HandleBtnExtended(Btn_A);
 		//TODO: Implement me!
-	}
-	
-	// +==============================+
-	// |            Btn_B             |
-	// +==============================+
-	if (BtnReleased(Btn_B))
-	{
-		HandleBtn(Btn_B);
-		if (game->openInventory == nullptr)
-		{
-			game->openInventory = &game->player.inventory;
-		}
-		else
-		{
-			game->openInventory = nullptr;
-		}
 	}
 	
 	FreeScratchArena(scratch);
@@ -122,10 +130,8 @@ void RenderAppState_Game(bool isOnTop)
 	// +==============================+
 	// |      Render Inventories      |
 	// +==============================+
-	if (game->openInventory != nullptr)
-	{
-		RenderInventoryUi(game->openInventory);
-	}
+	if (game->openInventory != nullptr) { RenderInventoryUi(game->openInventory); }
+	if (game->openScrollInventory != nullptr) { RenderInventoryUi(game->openScrollInventory); }
 	
 	// +==============================+
 	// |         Debug Render         |

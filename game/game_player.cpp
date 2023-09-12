@@ -12,6 +12,7 @@ void FreePlayer(Player_t* player)
 	if (player->allocArena != nullptr)
 	{
 		FreeInventory(&player->inventory);
+		FreeInventory(&player->scienceInventory);
 	}
 	ClearPointer(player);
 }
@@ -25,12 +26,13 @@ void InitPlayer(Player_t* player, MemArena_t* memArena, v2 startPos)
 	player->velocity = Vec2_Zero;
 	player->rotation = Dir2Ex_Down;
 	InitInventory(&player->inventory, player->allocArena, InvType_PlayerInventory);
+	InitInventory(&player->scienceInventory, player->allocArena, InvType_PlayerScience);
 }
 
 void UpdatePlayer(Player_t* player, World_t* world)
 {
 	NotNull4(player, player->allocArena, world, world->allocArena);
-	bool isInventoryOpen = (game->openInventory != nullptr);
+	bool isInventoryOpen = (game->openInventory != nullptr || game->openScrollInventory != nullptr);
 	
 	u8 inputDirFlags = Dir2_None;
 	if (!isInventoryOpen)

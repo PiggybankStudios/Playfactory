@@ -21,7 +21,7 @@ InvSlot_t* _TwoPassAddInvSlot(InvSlot_t* slots, u64 numSlots, u64* slotIndex, u6
 		result->gridPos = gridPos;
 		result->stack = NewItemStack(TileType_None, 0);
 		result->mainRec.topLeft = position;
-		result->mainRec.size = INV_SLOT_SIZE;
+		result->mainRec.size = Vec2iFill(INV_SLOT_SIZE);
 	}
 	*slotIndex = (*slotIndex) + 1;
 	return result;
@@ -30,6 +30,7 @@ InvSlot_t* _TwoPassAddInvSlot(InvSlot_t* slots, u64 numSlots, u64* slotIndex, u6
 InvSlot_t* GetInvSlotsForInvType(InvType_t type, MemArena_t* memArena, u64* numSlotsOut)
 {
 	#define AddInvSlot(groupId, gridPos, position) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, (groupId), (gridPos), (position))
+	#define AddInvSlotSimple(groupId, gridPos) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, (groupId), (gridPos), Vec2iMultiply((gridPos), Vec2iFill(INV_SLOT_SIZE + INV_SLOT_MARGIN)))
 	
 	#define TwoPassAddSlotLoopStart() for (pass = 0; pass < 2; pass++)
 	#define TwoPassAddSlotLoopEnd() do                                    \
@@ -60,10 +61,20 @@ InvSlot_t* GetInvSlotsForInvType(InvType_t type, MemArena_t* memArena, u64* numS
 				{
 					for (i32 xPos = 0; xPos < PLAYER_INV_SIZE.width; xPos++)
 					{
-						AddInvSlot(0, NewVec2i(xPos, yPos), NewVec2i(xPos * INV_SLOT_ADVANCE.width, yPos * INV_SLOT_ADVANCE.height));
+						AddInvSlotSimple(0, NewVec2i(xPos, yPos));
 					}
 				}
 				
+				TwoPassAddSlotLoopEnd();
+			}
+		} break;
+		case InvType_PlayerScience:
+		{
+			TwoPassAddSlotLoopStart()
+			{
+				slotIndex = 0;
+				AddInvSlotSimple(0, NewVec2i(0, 0));
+				AddInvSlotSimple(0, NewVec2i(1, 0));
 				TwoPassAddSlotLoopEnd();
 			}
 		} break;
@@ -71,7 +82,13 @@ InvSlot_t* GetInvSlotsForInvType(InvType_t type, MemArena_t* memArena, u64* numS
 		{
 			TwoPassAddSlotLoopStart()
 			{
-				
+				for (i32 yPos = 0; yPos < SMALL_BOX_INV_SIZE.height; yPos++)
+				{
+					for (i32 xPos = 0; xPos < SMALL_BOX_INV_SIZE.width; xPos++)
+					{
+						AddInvSlotSimple(0, NewVec2i(xPos, yPos));
+					}
+				}
 				TwoPassAddSlotLoopEnd();
 			}
 		} break;

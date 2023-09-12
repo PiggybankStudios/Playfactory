@@ -6,3 +6,4 @@ lib/include/gylib/
 engine/
 release/*
 !release/screenshots/
+src_content/
