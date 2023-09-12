@@ -8,6 +8,10 @@ Description:
 
 GameState_t* game = nullptr;
 
+#include "game_view.cpp"
+#include "game_world.cpp"
+#include "game_player.cpp"
+
 // +--------------------------------------------------------------+
 // |                            Start                             |
 // +--------------------------------------------------------------+
@@ -24,11 +28,14 @@ void StartAppState_Game(bool initialize, AppState_t prevState, MyStr_t transitio
 		game->testSound = LoadSound(NewStr("Resources/Sounds/test"));
 		Assert(game->testSound.isValid);
 		
-		game->pigEngineText = NewStr("Pig Engine");
-		game->pigPos.x = (ScreenSize.width - game->pigTexture.width) / 2.0f;
-		game->pigPos.y = (ScreenSize.height - game->pigTexture.height) / 2.0f;
-		game->pigVel.x = 1;
-		game->pigVel.y = 2;
+		game->kennySheet = LoadSpriteSheet(NewStr("Resources/Sheets/kenny"), 49);
+		Assert(game->kennySheet.isValid);
+		game->playerSheet = LoadSpriteSheet(NewStr("Resources/Sheets/player"), 6);
+		Assert(game->playerSheet.isValid);
+		
+		InitWorld(&game->world, mainHeap, DEFAULT_WORLD_SIZE, DEFAULT_WORLD_SEED);
+		InitPlayer(&game->player, mainHeap, ToVec2(game->world.pixelSize) / 2.0f);
+		InitGameView(&game->view, game->player.position, game->world.size * TILE_SIZE);
 		
 		game->initialized = true;
 	}
@@ -41,7 +48,8 @@ void StopAppState_Game(bool deinitialize, AppState_t nextState)
 {
 	if (deinitialize)
 	{
-		//TODO: Free things!
+		FreePlayer(&game->player);
+		FreeWorld(&game->world);
 		ClearPointer(game);
 	}
 }
@@ -53,47 +61,26 @@ void UpdateAppState_Game()
 {
 	MemArena_t* scratch = GetScratchArena();
 	
-	v2i pigEngineTextSize = MeasureText(game->mainFont.font, game->pigEngineText);
-	v2i totalWidgetSize = NewVec2i(
-		MaxI32(game->pigTexture.width, pigEngineTextSize.width),
-		game->pigTexture.height + pigEngineTextSize.height
-	);
+	UpdatePlayer(&game->player, &game->world);
+	UpdateGameView(&game->view, game->player.position, ToVec2(game->player.inputDir), game->world.size * TILE_SIZE);
+	UpdateWorld(&game->world);
 	
+	// +==============================+
+	// |            Btn_A             |
+	// +==============================+
 	if (BtnPressed(Btn_A))
 	{
 		HandleBtnExtended(Btn_A);
-		game->isInverted = !game->isInverted;
+		//TODO: Implement me!
 	}
+	
+	// +==============================+
+	// |            Btn_B             |
+	// +==============================+
 	if (BtnPressed(Btn_B))
 	{
 		HandleBtnExtended(Btn_B);
-		game->pigVel.x += SignOfR32(game->pigVel.x);
-		game->pigVel.y += SignOfR32(game->pigVel.y);
-		
-		PlaySound(&game->testSound);
-	}
-	
-	game->pigPos += game->pigVel * TimeScale;
-	
-	if (game->pigPos.x < 0)
-	{
-		game->pigPos.x = 0;
-		game->pigVel.x = AbsR32(game->pigVel.x);
-	}
-	if (game->pigPos.x > ScreenSize.width - totalWidgetSize.width)
-	{
-		game->pigPos.x = (r32)(ScreenSize.width - totalWidgetSize.width);
-		game->pigVel.x = -AbsR32(game->pigVel.x);
-	}
-	if (game->pigPos.y < 0)
-	{
-		game->pigPos.y = 0;
-		game->pigVel.y = AbsR32(game->pigVel.y);
-	}
-	if (game->pigPos.y > ScreenSize.height - totalWidgetSize.height)
-	{
-		game->pigPos.y = (r32)(ScreenSize.height - totalWidgetSize.height);
-		game->pigVel.y = -AbsR32(game->pigVel.y);
+		//TODO: Implement me!
 	}
 	
 	FreeScratchArena(scratch);
@@ -106,23 +93,24 @@ void RenderAppState_Game(bool isOnTop)
 {
 	MemArena_t* scratch = GetScratchArena();
 	
-	pd->graphics->clear(game->isInverted ? kColorBlack : kColorWhite);
-	PdSetDrawMode(game->isInverted ? kDrawModeInverted : kDrawModeCopy);
+	pd->graphics->clear(kColorWhite);
+	PdSetDrawMode(kDrawModeCopy);
 	
-	MyStr_t gameTitleStr = NewStr(PROJECT_NAME);
-	v2i gameTitleSize = MeasureText(gl->titleFont.font, gameTitleStr);
-	v2i gameTitlePos = NewVec2i(ScreenSize.width/2 - gameTitleSize.width/2, ScreenSize.height/4 - gameTitleSize.height/2);
-	PdBindFont(&gl->titleFont);
-	PdDrawText(gameTitleStr, gameTitlePos);
+	// +==============================+
+	// |    Render Items in World     |
+	// +==============================+
+	{
+		PdSetRenderOffset(-game->view.worldReci.topLeft);
+		
+		RenderWorld(&game->world);
+		RenderPlayer(&game->player);
+		
+		PdSetRenderOffset(Vec2i_Zero);
+	}
 	
-	reci pigIconRec = NewReci(Vec2Roundi(game->pigPos), game->pigTexture.size);
-	v2i pigEngineTextPos = pigIconRec.topLeft + NewVec2i(0, pigIconRec.height);
-	LCDBitmapDrawMode oldDrawMode = PdSetDrawMode(kDrawModeNXOR);
-	PdBindFont(&game->mainFont);
-	PdDrawText(game->pigEngineText, pigEngineTextPos);
-	pd->graphics->setDrawMode(oldDrawMode);
-	PdDrawTexturedRec(game->pigTexture, pigIconRec);
-	
+	// +==============================+
+	// |         Debug Render         |
+	// +==============================+
 	if (pig->debugEnabled)
 	{
 		LCDBitmapDrawMode oldDrawMode = PdSetDrawMode(kDrawModeNXOR);
@@ -143,6 +131,7 @@ void RenderAppState_Game(bool isOnTop)
 		PdDrawTextPrint(textPos, "main: %llu chars Height:%d %s", game->mainFont.numChars, game->mainFont.lineHeight, GetFontCapsStr(game->mainFont));
 		textPos.y += stepY;
 		
+		#if 0
 		for (u8 rangeIndex = 0; rangeIndex < FontRange_NumRanges; rangeIndex++)
 		{
 			FontRange_t range = FontRangeByIndex(rangeIndex);
@@ -175,6 +164,7 @@ void RenderAppState_Game(bool isOnTop)
 				textPos.y += stepY;
 			}
 		}
+		#endif
 		
 		PdSetDrawMode(oldDrawMode);
 	}

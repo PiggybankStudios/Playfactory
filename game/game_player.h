@@ -1,0 +1,27 @@
+/*
+File:   game_player.h
+Author: Taylor Robbins
+Date:   09\10\2023
+*/
+
+#ifndef _GAME_PLAYER_H
+#define _GAME_PLAYER_H
+
+#define PLAYER_SIZE          NewVec2i(32, 32)
+#define PLAYER_COLLISION_REC NewRec(-7, 0, 14, 14)
+
+#define PLAYER_WALK_SPEED   6.0f
+#define PLAYER_FRICTION     50 //percent
+
+struct Player_t
+{
+	MemArena_t* allocArena;
+	v2 position;
+	rec colRec;
+	v2 velocity;
+	v2 lookVec;
+	Dir2Ex_t inputDir;
+	Dir2Ex_t rotation;
+};
+
+#endif //  _GAME_PLAYER_H
