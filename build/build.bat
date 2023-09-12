@@ -90,4 +90,4 @@ cl /Fo"%OutputObjName%" %CompilerFlags% %IncludeDirectories% /c "%MainSourcePath
 LINK %LinkerFlags% %Libraries% "%OutputObjName%" /OUT:"%OutputDllName%" /IMPLIB:"%OutputLibName%" /PDB:"%OutputPdbName%"
 XCOPY ".\%OutputDllName%" "%DataDirectory%\" /Y > NUL
 
-%PdcExeName% %PdcFlags% "%DataDirectory%" "%PdcOutputFolder%"
+"%PdcExeName%" %PdcFlags% "%DataDirectory%" "%PdcOutputFolder%"
