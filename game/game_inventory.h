@@ -14,6 +14,8 @@ Date:   09\11\2023
 #define INV_PADDING           4 //px
 #define INV_BORDER_THICKNESS  2 //px
 
+#define STACK_MAX  16
+
 #define INV_SLOT_GROW_BIG_ANIM_TIME  200 //ms
 #define INV_SCROLL_CRANK_HINT_INACTIVE_DISPLAY_TIME   2000 //ms
 

@@ -11,8 +11,8 @@ Date:   09\08\2023
 #define DEFAULT_WORLD_SIZE   NewVec2i(100, 100)
 #define DEFAULT_WORLD_SEED   1
 
-#include "game_tile_types.h"
 #include "game_item_ids.h"
+#include "game_tile_types.h"
 #include "game_inv_types.h"
 #include "game_inventory.h"
 #include "game_view.h"
@@ -28,6 +28,7 @@ struct GameState_t
 	Sound_t testSound;
 	SpriteSheet_t kennySheet;
 	SpriteSheet_t playerSheet;
+	SpriteSheet_t playerMiningSheet;
 	SpriteSheet_t entitiesSheet;
 	
 	GameView_t view;

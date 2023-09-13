@@ -35,7 +35,7 @@ void UpdatePlayer(Player_t* player, World_t* world)
 	bool isInventoryOpen = (game->openInventory != nullptr || game->openScrollInventory != nullptr);
 	
 	u8 inputDirFlags = Dir2_None;
-	if (!isInventoryOpen)
+	if (!isInventoryOpen && !player->isMining)
 	{
 		if (BtnDown(Btn_Right)) { HandleBtn(Btn_Right); inputDirFlags |= Dir2_Right; }
 		if (BtnDown(Btn_Left))  { HandleBtn(Btn_Left);  inputDirFlags |= Dir2_Left;  }
@@ -66,6 +66,66 @@ void UpdatePlayer(Player_t* player, World_t* world)
 	v2 resolvedOffset = resolvedPos - player->colRec.topLeft;
 	player->position += resolvedOffset;
 	player->colRec.topLeft += resolvedOffset;
+	
+	player->targetPos = player->position + PLAYER_TARGET_OFFSET + (PLAYER_TARGET_DIST * Vec2Normalize(ToVec2(player->rotation)));
+	player->targetTilePos = Vec2Floori(player->targetPos / TILE_SIZE);
+	player->targetTile = GetWorldTileAt(world, player->targetTilePos);
+	
+	ItemStack_t targetDrop = {};
+	if (player->targetTile != nullptr) { targetDrop = GetTileTypeDrop(player->targetTile->type); }
+	
+	if (targetDrop.count > 0 && targetDrop.id != ItemId_None && !isInventoryOpen)
+	{
+		// +==============================+
+		// |    Btn_A to Start Mining     |
+		// +==============================+
+		if (!player->isMining && BtnPressed(Btn_A))
+		{
+			HandleBtnExtended(Btn_A);
+			player->isMining = true;
+			reci targetTileRec = NewReci(
+				player->targetTilePos.x * TILE_SIZE,
+				player->targetTilePos.y * TILE_SIZE,
+				TILE_SIZE, TILE_SIZE
+			);
+			player->position = ToVec2(targetTileRec.topLeft) + NewVec2((r32)(targetTileRec.width/2), (r32)(targetTileRec.height/2)) - (ToVec2(player->rotation) * TILE_SIZE);
+			player->velocity = Vec2_Zero;
+			player->miningProgress = 0.25f;
+		}
+		
+		if (player->isMining)
+		{
+			// +==============================+
+			// |         Crank Mines          |
+			// +==============================+
+			if (CrankMoved())
+			{
+				HandleCrankDelta();
+				player->miningProgress += AbsR32(input->crankDelta) * PLAYER_MINING_SPEED;
+				if (player->miningProgress > 1.0f)
+				{
+					player->miningProgress -= 1.0f;
+					//TODO: Play a sound effect
+					u8 numItemsLeft = TryAddItemStackToInventory(&player->inventory, targetDrop);
+					if (numItemsLeft > 0)
+					{
+						PrintLine_W("Couldn't find space for %u %s in the player inventory!", numItemsLeft, GetItemIdStr(targetDrop.id));
+					}
+				}
+			}
+			
+			// +==============================+
+			// |    Btn_B to Cancel Mining    |
+			// +==============================+
+			if (BtnPressed(Btn_B))
+			{
+				HandleBtnExtended(Btn_B);
+				player->isMining = false;
+			}
+		}
+	}
+	else { player->isMining = false; }
+	
 }
 
 void RenderPlayer(Player_t* player)
@@ -73,7 +133,10 @@ void RenderPlayer(Player_t* player)
 	NotNull2(player, player->allocArena);
 	
 	bool drawPlayer = true;
+	SpriteSheet_t* sheet = &game->playerSheet;
 	v2i playerFrame = NewVec2i(0, 0);
+	v2i playerSize = PLAYER_SIZE;
+	v2i playerOffset = Vec2i_Zero;
 	switch (player->rotation)
 	{
 		case Dir2Ex_Right:       playerFrame = NewVec2i(0, 6); break;
@@ -85,21 +148,35 @@ void RenderPlayer(Player_t* player)
 		case Dir2Ex_BottomRight: playerFrame = NewVec2i(0, 7); break;
 		case Dir2Ex_BottomLeft:  playerFrame = NewVec2i(0, 1); break;
 	}
-	if (player->inputDir != Dir2Ex_None)
+	if (player->isMining)
+	{
+		sheet = &game->playerMiningSheet;
+		playerFrame.x = FloorR32i(sheet->numFramesX * player->miningProgress) % sheet->numFramesX;
+		playerFrame.y = ((player->rotation == Dir2Ex_Right) ? 1 : 0);
+		playerSize = sheet->frameSize * 2;
+		playerOffset = NewVec2i(0, -13);
+	}
+	else if (player->inputDir != Dir2Ex_None)
 	{
 		playerFrame.x += (i32)AnimateU64(0, 4, 1000);
 	}
 	
-	reci playerRec;
-	playerRec.size = PLAYER_SIZE;
-	playerRec.x = RoundR32i(player->position.x - (r32)playerRec.width / 2.0f);
-	playerRec.y = RoundR32i(player->position.y - (r32)playerRec.height / 2.0f);
-	PdDrawSheetFrame(game->playerSheet, playerFrame, playerRec);
+	reci playerRec = NewReci(
+		playerOffset.x + RoundR32i(player->position.x - (r32)playerSize.width / 2.0f),
+		playerOffset.y + RoundR32i(player->position.y - (r32)playerSize.height / 2.0f),
+		playerSize
+	);
+	PdDrawSheetFrame(*sheet, playerFrame, playerRec);
 	
 	if (pig->debugEnabled)
 	{
 		LCDBitmapDrawMode oldDrawMode = PdSetDrawMode(kDrawModeNXOR);
+		
 		PdDrawRec(NewReci(Vec2Roundi(player->colRec.topLeft), Vec2Roundi(player->colRec.size)), kColorBlack);
+		
+		PdDrawRec(NewReci(Vec2Roundi(player->targetPos), 2, 2), kColorBlack);
+		PdDrawRecOutline(NewReci(player->targetTilePos.x * TILE_SIZE, player->targetTilePos.y * TILE_SIZE, TILE_SIZE, TILE_SIZE), 1);
+		
 		PdSetDrawMode(oldDrawMode);
 	}
 }

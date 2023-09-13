@@ -34,6 +34,8 @@ void StartAppState_Game(bool initialize, AppState_t prevState, MyStr_t transitio
 		Assert(game->kennySheet.isValid);
 		game->playerSheet = LoadSpriteSheet(NewStr("Resources/Sheets/player"), 6);
 		Assert(game->playerSheet.isValid);
+		game->playerMiningSheet = LoadSpriteSheet(NewStr("Resources/Sheets/player_mining"), 8);
+		Assert(game->playerMiningSheet.isValid);
 		game->entitiesSheet = LoadSpriteSheet(NewStr("Resources/Sheets/entities"), 8);
 		Assert(game->entitiesSheet.isValid);
 		
@@ -121,10 +123,20 @@ void RenderAppState_Game(bool isOnTop)
 	{
 		PdSetRenderOffset(-game->view.worldReci.topLeft);
 		
-		RenderWorld(&game->world);
+		RenderWorld(&game->world, &game->player);
 		RenderPlayer(&game->player);
 		
 		PdSetRenderOffset(Vec2i_Zero);
+	}
+	
+	// +==============================+
+	// | Render Crank Hint for Mining |
+	// +==============================+
+	if (game->player.isMining)
+	{
+		reci crankHintRec = PlaydateCrankHintBubble(false, true, 1.0f, Vec2i_Zero);
+		v2i crankTargetPos = NewVec2i(ScreenSize.width, ScreenSize.height - 8 - crankHintRec.height/2);
+		PlaydateCrankHintBubble(true, true, 1.0f, crankTargetPos);
 	}
 	
 	// +==============================+
@@ -146,6 +158,9 @@ void RenderAppState_Game(bool isOnTop)
 		i32 stepY = pig->debugFont.lineHeight + 1;
 		
 		PdDrawTextPrint(textPos, "ProgramTime: %u (%u)", ProgramTime, input->realProgramTime);
+		textPos.y += stepY;
+		
+		PdDrawTextPrint(textPos, "Target: (%g, %g) (%d, %d)", game->player.targetPos.x, game->player.targetPos.y, game->player.targetTilePos.x, game->player.targetTilePos.y);
 		textPos.y += stepY;
 		
 		u64 numSoundInstances = 0;

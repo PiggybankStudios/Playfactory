@@ -166,7 +166,7 @@ void UpdateWorld(World_t* world)
 	//TODO: Implement me!
 }
 
-void RenderWorld(World_t* world)
+void RenderWorld(World_t* world, const Player_t* player)
 {
 	NotNull2(world, world->allocArena);
 	
@@ -181,6 +181,12 @@ void RenderWorld(World_t* world)
 			if (tileFrame != NewVec2i(-1, -1))
 			{
 				PdDrawSheetFrame(game->entitiesSheet, tileFrame, tileRec);
+				
+				ItemStack_t dropStack = GetTileTypeDrop(tile->type);
+				if (dropStack.count > 0 && player->targetTilePos == tilePos && !player->isMining)
+				{
+					PdDrawRecOutline(tileRec, RoundR32i(Oscillate(1, 3, 1000)), true);
+				}
 			}
 		}
 	}

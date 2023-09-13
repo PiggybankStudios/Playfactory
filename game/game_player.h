@@ -9,6 +9,9 @@ Date:   09\10\2023
 
 #define PLAYER_SIZE          NewVec2i(32, 32)
 #define PLAYER_COLLISION_REC NewRec(-7, 0, 14, 14)
+#define PLAYER_TARGET_OFFSET NewVec2(0, 2)
+#define PLAYER_TARGET_DIST   24
+#define PLAYER_MINING_SPEED  (1.0f / 360.0f) //progress/degree
 
 #define PLAYER_WALK_SPEED   6.0f
 #define PLAYER_FRICTION     50 //percent
@@ -22,8 +25,15 @@ struct Player_t
 	v2 lookVec;
 	Dir2Ex_t inputDir;
 	Dir2Ex_t rotation;
+	
 	Inventory_t inventory;
 	Inventory_t scienceInventory;
+	
+	bool isMining;
+	r32 miningProgress;
+	v2 targetPos;
+	v2i targetTilePos;
+	WorldTile_t* targetTile;
 };
 
 #endif //  _GAME_PLAYER_H

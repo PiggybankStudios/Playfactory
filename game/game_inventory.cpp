@@ -7,6 +7,47 @@ Description:
 	** They can be chests, machines, or the player inventory
 */
 
+//Returns number of items that couldn't be placed
+u8 TryAddItemStackToInventory(Inventory_t* inventory, ItemStack_t stack)
+{
+	u8 countLeft = stack.count;
+	
+	while (countLeft > 0)
+	{
+		InvSlot_t* targetSlot = nullptr;
+		for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
+		{
+			InvSlot_t* slot = &inventory->slots[sIndex];
+			if (slot->stack.count > 0 && slot->stack.id == stack.id)
+			{
+				u8 spaceLeft = STACK_MAX - slot->stack.count;
+				if (spaceLeft > 0)
+				{
+					targetSlot = slot;
+					break;
+				}
+			}
+			if (targetSlot == nullptr && slot->stack.count == 0)
+			{
+				targetSlot = slot;
+			}
+		}
+		
+		if (targetSlot != nullptr)
+		{
+			u8 spaceLeft = STACK_MAX - targetSlot->stack.count;
+			u8 amountToAdd = (u8)MinU32(spaceLeft, countLeft);
+			targetSlot->stack.id = stack.id;
+			targetSlot->stack.count += amountToAdd;
+			PrintLine_D("Adding %u %s to slot[%llu] (%d, %d)", amountToAdd, GetItemIdStr(stack.id), targetSlot->index, targetSlot->gridPos.x, targetSlot->gridPos.y);
+			countLeft -= amountToAdd;
+		}
+		else { break; }
+	}
+	
+	return countLeft;
+}
+
 void FreeInventory(Inventory_t* inventory)
 {
 	NotNull(inventory);
@@ -26,8 +67,8 @@ void InitInventory(Inventory_t* inventory, MemArena_t* memArena, InvType_t type)
 	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
 	{
 		InvSlot_t* slot = &inventory->slots[sIndex];
-		slot->stack.type = TileType_None;
-		if (GetRandR32(&pig->random) < 0.25f) { slot->stack.type = (TileType_t)(GetRandU32(&pig->random, TileType_Peppermint, TileType_NumTiles)); } //TODO: Remove me!
+		slot->stack.id = ItemId_None;
+		if (GetRandR32(&pig->random) < 0.25f) { slot->stack.id = (ItemId_t)(GetRandU32(&pig->random, ItemId_Peppermint, ItemId_NumIds)); } //TODO: Remove me!
 		slot->stack.count = 1;
 	}
 }
@@ -81,7 +122,6 @@ void UpdateInventory(Inventory_t* inventory)
 		if (CrankMoved())
 		{
 			HandleCrankDelta();
-			PrintLine_D("Crank moved %g", input->crankDelta);
 			inventory->scroll += input->crankDelta;
 			inventory->showCrankHint = false;
 		}
@@ -132,7 +172,7 @@ void RenderInventorySlot(InvSlot_t* slot, reci slotRec)
 	
 	if (slot->stack.count > 0)
 	{
-		v2i itemFrame = GetTileTypeFrame(slot->stack.type, false, slot->gridPos);
+		v2i itemFrame = GetItemIdFrame(slot->stack.id);
 		if (itemFrame != NewVec2i(-1, -1))
 		{
 			reci itemRec = NewReci(

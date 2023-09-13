@@ -19,7 +19,7 @@ InvSlot_t* _TwoPassAddInvSlot(InvSlot_t* slots, u64 numSlots, u64* slotIndex, u6
 		result->index = *slotIndex;
 		result->groupId = groupId;
 		result->gridPos = gridPos;
-		result->stack = NewItemStack(TileType_None, 0);
+		result->stack = NewItemStack(ItemId_None, 0);
 		result->mainRec.topLeft = position;
 		result->mainRec.size = Vec2iFill(INV_SLOT_SIZE);
 	}

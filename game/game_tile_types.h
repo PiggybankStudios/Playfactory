@@ -56,4 +56,16 @@ bool IsTileTypeSolid(TileType_t type)
 	}
 }
 
+ItemStack_t GetTileTypeDrop(TileType_t type)
+{
+	switch (type)
+	{
+		case TileType_Peppermint: return NewItemStack(ItemId_Peppermint, 1);
+		case TileType_Strawberry: return NewItemStack(ItemId_Strawberry, 1);
+		case TileType_Cherry:     return NewItemStack(ItemId_Cherry,     1);
+		case TileType_Caramel:    return NewItemStack(ItemId_Caramel,    1);
+		default: return NewItemStack(ItemId_None, 0);
+	}
+}
+
 #endif //  _GAME_TILE_TYPES_H
