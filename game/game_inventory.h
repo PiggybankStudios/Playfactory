@@ -7,10 +7,10 @@ Date:   09\11\2023
 #ifndef _GAME_INVENTORY_H
 #define _GAME_INVENTORY_H
 
-#define INV_SLOT_SIZE         34 //px
+#define INV_SLOT_SIZE         42 //px
 #define INV_SLOT_LARGE_SIZE   68 //px
 #define INV_SLOT_MARGIN       2 //px
-#define INV_ITEM_SIZE         32 //px
+#define INV_ITEM_SIZE         40 //px
 #define INV_PADDING           4 //px
 #define INV_BORDER_THICKNESS  2 //px
 

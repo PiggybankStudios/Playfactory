@@ -140,6 +140,7 @@
 			"ItemStack_t NewItemStack(ItemId_t id, u8 count)",
 			"LCDBitmapDrawMode PdSetDrawMode(LCDBitmapDrawMode drawMode)",
 			"MMenuBtn_t* AddButtonMainMenu(MMenuAction_t action, MyStr_t displayText)",
+			"MyStr_t PrintInArenaStr(MemArena_t* arena, const char* formatString, ...)",
 			"SpriteSheet_t LoadSpriteSheet(MyStr_t path, i32 numFramesX)",
 			"Texture_t CreateTexture(v2i size, u64 dataSize, const u8* pixelData, const u8* maskData)",
 			"WorldTile_t* GetWorldTileAt(World_t* world, v2i tilePos)",

@@ -27,9 +27,13 @@ u8 TryAddItemStackToInventory(Inventory_t* inventory, ItemStack_t stack)
 					break;
 				}
 			}
-			if (targetSlot == nullptr && slot->stack.count == 0)
+			else if (targetSlot == nullptr && slot->stack.count == 0)
 			{
 				targetSlot = slot;
+			}
+			else
+			{
+				// PrintLine_D("Ignoring slot[%llu] x%u %s", sIndex, slot->stack.count, GetItemIdStr(slot->stack.id));
 			}
 		}
 		
@@ -68,8 +72,12 @@ void InitInventory(Inventory_t* inventory, MemArena_t* memArena, InvType_t type)
 	{
 		InvSlot_t* slot = &inventory->slots[sIndex];
 		slot->stack.id = ItemId_None;
-		if (GetRandR32(&pig->random) < 0.25f) { slot->stack.id = (ItemId_t)(GetRandU32(&pig->random, ItemId_Peppermint, ItemId_NumIds)); } //TODO: Remove me!
-		slot->stack.count = 1;
+		slot->stack.count = 0;
+		// if (GetRandR32(&pig->random) < 0.25f)//TODO: Remove me!
+		// {
+		// 	slot->stack.id = (ItemId_t)(GetRandU32(&pig->random, ItemId_Peppermint, ItemId_NumIds));
+		// 	slot->stack.count = 1;
+		// }
 	}
 }
 
@@ -167,6 +175,8 @@ void UpdateInventory(Inventory_t* inventory)
 
 void RenderInventorySlot(InvSlot_t* slot, reci slotRec)
 {
+	MemArena_t* scratch = GetScratchArena();
+	
 	PdDrawRec(slotRec, kColorWhite);
 	PdDrawRecOutline(slotRec, 2, kColorBlack);
 	
@@ -183,7 +193,17 @@ void RenderInventorySlot(InvSlot_t* slot, reci slotRec)
 			);
 			PdDrawSheetFrame(game->entitiesSheet, itemFrame, itemRec);
 		}
+		
+		MyStr_t countStr = PrintInArenaStr(scratch, "%u", slot->stack.count);
+		v2i countStrSize = MeasureText(game->itemCountFont.font, countStr);
+		v2i countStrPos = slotRec.topLeft + slotRec.size - NewVec2i(5, 2) - countStrSize;
+		PdBindFont(&game->itemCountFont);
+		// LCDBitmapDrawMode oldDrawMode = PdSetDrawMode(kDrawModeNXOR);
+		PdDrawText(countStr, countStrPos);
+		// PdSetDrawMode(oldDrawMode);
 	}
+	
+	FreeScratchArena(scratch);
 }
 
 void RenderInventoryUi(Inventory_t* inventory)

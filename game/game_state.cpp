@@ -23,6 +23,8 @@ void StartAppState_Game(bool initialize, AppState_t prevState, MyStr_t transitio
 	{
 		game->mainFont = LoadFont(NewStr(MAIN_FONT_PATH));
 		Assert(game->mainFont.isValid);
+		game->itemCountFont = LoadFont(NewStr("Resources/Fonts/blocky"));
+		Assert(game->itemCountFont.isValid);
 		
 		game->pigTexture = LoadTexture(NewStr("Resources/Sprites/pig64"));
 		Assert(game->pigTexture.isValid);

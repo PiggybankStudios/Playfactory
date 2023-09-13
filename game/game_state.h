@@ -24,6 +24,7 @@ struct GameState_t
 	bool initialized;
 	
 	Font_t mainFont;
+	Font_t itemCountFont;
 	Texture_t pigTexture;
 	Sound_t testSound;
 	SpriteSheet_t kennySheet;
