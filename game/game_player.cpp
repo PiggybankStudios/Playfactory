@@ -37,16 +37,45 @@ void UpdatePlayer(Player_t* player, World_t* world)
 	u8 inputDirFlags = Dir2_None;
 	if (!isInventoryOpen && !player->isMining)
 	{
-		if (BtnDown(Btn_Right)) { HandleBtn(Btn_Right); inputDirFlags |= Dir2_Right; }
-		if (BtnDown(Btn_Left))  { HandleBtn(Btn_Left);  inputDirFlags |= Dir2_Left;  }
-		if (BtnDown(Btn_Up))    { HandleBtn(Btn_Up);    inputDirFlags |= Dir2_Up;    }
-		if (BtnDown(Btn_Down))  { HandleBtn(Btn_Down);  inputDirFlags |= Dir2_Down;  }
+		u8 pressedDirFlags = Dir2_None;
+		if (BtnDown(Btn_Right)) { HandleBtn(Btn_Right); FlagSet(inputDirFlags, Dir2_Right); if (BtnPressedRaw(Btn_Right)) { FlagSet(pressedDirFlags, Dir2_Right); } }
+		if (BtnDown(Btn_Left))  { HandleBtn(Btn_Left);  FlagSet(inputDirFlags, Dir2_Left);  if (BtnPressedRaw(Btn_Left))  { FlagSet(pressedDirFlags, Dir2_Left);  } }
+		if (BtnDown(Btn_Up))    { HandleBtn(Btn_Up);    FlagSet(inputDirFlags, Dir2_Up);    if (BtnPressedRaw(Btn_Up))    { FlagSet(pressedDirFlags, Dir2_Up);    } }
+		if (BtnDown(Btn_Down))  { HandleBtn(Btn_Down);  FlagSet(inputDirFlags, Dir2_Down);  if (BtnPressedRaw(Btn_Down))  { FlagSet(pressedDirFlags, Dir2_Down);  } }
+		if (inputDirFlags != Dir2_None) { player->lastMoveTime = ProgramTime; }
+		if (!player->isRunning)
+		{
+			if (IsFlagSet(pressedDirFlags, Dir2_Right))
+			{
+				u64* lastRightPressTime = &player->lastArrowPressTime[GetDir2Index(Dir2_Right)];
+				if (*lastRightPressTime != 0 && TimeSince(*lastRightPressTime) < PLAYER_DOUBLE_TAP_RUN_TIMEOUT) { player->isRunning = true; }
+				else { *lastRightPressTime = ProgramTime; }
+			}
+			if (IsFlagSet(pressedDirFlags, Dir2_Left))
+			{
+				u64* lastLeftPressTime = &player->lastArrowPressTime[GetDir2Index(Dir2_Left)];
+				if (*lastLeftPressTime != 0 && TimeSince(*lastLeftPressTime) < PLAYER_DOUBLE_TAP_RUN_TIMEOUT) { player->isRunning = true; }
+				else { *lastLeftPressTime = ProgramTime; }
+			}
+			if (IsFlagSet(pressedDirFlags, Dir2_Up))
+			{
+				u64* lastUpPressTime = &player->lastArrowPressTime[GetDir2Index(Dir2_Up)];
+				if (*lastUpPressTime != 0 && TimeSince(*lastUpPressTime) < PLAYER_DOUBLE_TAP_RUN_TIMEOUT) { player->isRunning = true; }
+				else { *lastUpPressTime = ProgramTime; }
+			}
+			if (IsFlagSet(pressedDirFlags, Dir2_Down))
+			{
+				u64* lastDownPressTime = &player->lastArrowPressTime[GetDir2Index(Dir2_Down)];
+				if (*lastDownPressTime != 0 && TimeSince(*lastDownPressTime) < PLAYER_DOUBLE_TAP_RUN_TIMEOUT) { player->isRunning = true; }
+				else { *lastDownPressTime = ProgramTime; }
+			}
+		}
 	}
 	player->inputDir = Dir2ExFromDir2Flags(inputDirFlags);
 	if (player->inputDir != Dir2Ex_None)
 	{
 		v2 inputVec = Vec2Normalize(ToVec2(player->inputDir));
-		player->velocity = inputVec * PLAYER_WALK_SPEED;
+		player->velocity = inputVec * (player->isRunning ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED);
 		player->rotation = player->inputDir;
 		player->lookVec = Vec2Normalize(ToVec2(player->rotation));
 	}
@@ -57,6 +86,11 @@ void UpdatePlayer(Player_t* player, World_t* world)
 			player->velocity = player->velocity * (1.0f - (PLAYER_FRICTION/100.0f));
 		}
 		else { player->velocity = Vec2_Zero; }
+		
+		if (player->isRunning && TimeSince(player->lastMoveTime) >= PLAYER_STOP_RUN_TIMEOUT)
+		{
+			player->isRunning = false;
+		}
 	}
 	
 	player->position += player->velocity;

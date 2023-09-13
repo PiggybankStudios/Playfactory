@@ -1,0 +1,23 @@
+
+# TODO List:
+	[ ] Double tap arrow key to run
+	[ ] Inventory Types can define buttons
+	[ ] Selection of slots in non-scrolling inventory UIs
+	[ ] Combine candies in PlayerScience inventory to make new candies
+	[ ] Add a shop where you can buy and sell things
+	[ ] "Tools" in the player inventory UI
+	[ ] Somehow you need to be able to choose an item to put in your hand
+	[ ] Box that you can buy, place, and open
+	[ ] Tool for Destroying/picking up machine/pipe/etc.
+	[ ] A ladder that lets you visit the underground layer
+	[ ] Pipes that can pull items out of boxes and route them to other connected boxes
+	[ ] An drill you can buy and place next to a resource and it produces candy automatically
+	[ ] Items piped to the shop get sold automatically
+	[ ] A crafter that can have a composite candy chosen and will accept items piped to it
+	[ ] Pipe that goes up/down to upper/lower layer
+	[ ] Filter pipe that will only allow items of a particular type past
+	[ ] Liquid chocolate that can be gathered with a pump
+	[ ] Fluid container of some kind, support for fluids in pipes
+	[ ] Bottler/Solidifier for fluids that lets you get an item so you can do science to discover recipes that take fluids
+	[ ] Upgrades for pickaxe, inventory size, box size, pipe speed, miner speed, crafter speed, etc.
+	[ ] Pathway tiles and walls for decoration
