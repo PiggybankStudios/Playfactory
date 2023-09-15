@@ -15,7 +15,7 @@ Date:   09\10\2023
 
 #define PLAYER_WALK_SPEED             6.0f
 #define PLAYER_RUN_SPEED              10.0f
-#define PLAYER_DOUBLE_TAP_RUN_TIMEOUT 500 //ms
+#define PLAYER_DOUBLE_TAP_RUN_TIMEOUT 250 //ms
 #define PLAYER_STOP_RUN_TIMEOUT       200 //ms
 #define PLAYER_FRICTION               50 //percent
 

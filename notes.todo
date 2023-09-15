@@ -1,6 +1,5 @@
 
 # TODO List:
-	[ ] Double tap arrow key to run
 	[ ] Inventory Types can define buttons
 	[ ] Selection of slots in non-scrolling inventory UIs
 	[ ] Combine candies in PlayerScience inventory to make new candies
@@ -21,3 +20,8 @@
 	[ ] Bottler/Solidifier for fluids that lets you get an item so you can do science to discover recipes that take fluids
 	[ ] Upgrades for pickaxe, inventory size, box size, pipe speed, miner speed, crafter speed, etc.
 	[ ] Pathway tiles and walls for decoration
+	( ) Double tap to run shouldn't work if you quickly press different directions (Left Up Left for example)
+
+[X] Show item name next to selected item in scroll inventory
+[X] +1 item popup when mining, some display to show how many of that item you have in your inventory
+[X] Double tap arrow key to run

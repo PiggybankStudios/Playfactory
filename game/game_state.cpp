@@ -8,6 +8,7 @@ Description:
 
 GameState_t* game = nullptr;
 
+#include "game_particles.cpp"
 #include "game_inv_types.cpp"
 #include "game_inventory.cpp"
 #include "game_view.cpp"
@@ -41,6 +42,7 @@ void StartAppState_Game(bool initialize, AppState_t prevState, MyStr_t transitio
 		game->entitiesSheet = LoadSpriteSheet(NewStr("Resources/Sheets/entities"), 8);
 		Assert(game->entitiesSheet.isValid);
 		
+		InitParticleSystem(&game->parts, mainHeap, GAME_MAX_NUM_PARTICLES);
 		InitWorld(&game->world, mainHeap, DEFAULT_WORLD_SIZE, DEFAULT_WORLD_SEED);
 		InitPlayer(&game->player, mainHeap, ToVec2(game->world.pixelSize) / 2.0f);
 		InitGameView(&game->view, game->player.position, game->world.size * TILE_SIZE);
@@ -58,6 +60,7 @@ void StopAppState_Game(bool deinitialize, AppState_t nextState)
 	{
 		FreePlayer(&game->player);
 		FreeWorld(&game->world);
+		FreeParticleSystem(&game->parts);
 		ClearPointer(game);
 	}
 }
@@ -68,6 +71,8 @@ void StopAppState_Game(bool deinitialize, AppState_t nextState)
 void UpdateAppState_Game()
 {
 	MemArena_t* scratch = GetScratchArena();
+	
+	UpdateParticleSystem(&game->parts);
 	
 	// +==============================+
 	// |            Btn_B             |
@@ -125,11 +130,16 @@ void RenderAppState_Game(bool isOnTop)
 	{
 		PdSetRenderOffset(-game->view.worldReci.topLeft);
 		
+		// void RenderParticleSystem(ParticleSystem_t* system, u8 layers = PartLayer_All, bool renderNormalParts = true, bool renderUiParts = false)
+		RenderParticleSystem(&game->parts, PartLayer_Low);
 		RenderWorld(&game->world, &game->player);
 		RenderPlayer(&game->player);
+		RenderParticleSystem(&game->parts, PartLayer_High);
 		
 		PdSetRenderOffset(Vec2i_Zero);
 	}
+	
+	RenderParticleSystem(&game->parts, PartLayer_LowUi);
 	
 	// +==============================+
 	// | Render Crank Hint for Mining |
@@ -146,6 +156,8 @@ void RenderAppState_Game(bool isOnTop)
 	// +==============================+
 	if (game->openInventory != nullptr) { RenderInventoryUi(game->openInventory); }
 	if (game->openScrollInventory != nullptr) { RenderInventoryUi(game->openScrollInventory); }
+	
+	RenderParticleSystem(&game->parts, PartLayer_HighUi);
 	
 	// +==============================+
 	// |         Debug Render         |

@@ -141,9 +141,23 @@ void UpdatePlayer(Player_t* player, World_t* world)
 					player->miningProgress -= 1.0f;
 					//TODO: Play a sound effect
 					u8 numItemsLeft = TryAddItemStackToInventory(&player->inventory, targetDrop);
+					u8 numItemsAdded = targetDrop.count - numItemsLeft;
 					if (numItemsLeft > 0)
 					{
 						PrintLine_W("Couldn't find space for %u %s in the player inventory!", numItemsLeft, GetItemIdStr(targetDrop.id));
+					}
+					if (numItemsAdded > 0)
+					{
+						v2 targetTileCenter = ToVec2(player->targetTilePos * TILE_SIZE) + Vec2Fill(TILE_SIZE/2);
+						Particle_t* newPart = TrySpawnParticle(&game->parts,
+							PartLayer_High,
+							targetTileCenter,
+							NewVec2(0, -1),
+							&game->entitiesSheet,
+							GetItemIdFrame(targetDrop.id),
+							1000
+						);
+						ParticleSetDisplayNumber(newPart, &game->itemCountFont, targetDrop.count);
 					}
 				}
 			}

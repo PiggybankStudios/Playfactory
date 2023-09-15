@@ -254,6 +254,19 @@ void RenderInventoryUi(Inventory_t* inventory)
 			v2i playdateCrankHintTarget = NewVec2i(inventory->mainRec.x, inventory->mainRec.y + inventory->mainRec.height - 5 - playdateCrankHintSize.height/2);
 			PlaydateCrankHintBubble(true, true, crankHintScale, playdateCrankHintTarget);
 		}
+		
+		if (inventory->selectionIndex >= 0 && (u64)inventory->selectionIndex < inventory->numSlots)
+		{
+			InvSlot_t* selectedSlot = &inventory->slots[inventory->selectionIndex];
+			if (selectedSlot->stack.count > 0 && selectedSlot->stack.id != ItemId_None)
+			{
+				MyStr_t itemName = NewStr(GetItemIdStr(selectedSlot->stack.id));
+				v2i itemNameSize = MeasureText(game->mainFont.font, itemName);
+				v2i itemNamePos = NewVec2i(inventory->mainRec.x - 2 - itemNameSize.width, 2);
+				PdBindFont(&game->mainFont);
+				PdDrawText(itemName, itemNamePos);
+			}
+		}
 	}
 	else 
 	{
