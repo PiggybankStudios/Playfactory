@@ -1,7 +1,6 @@
 
 # TODO List:
 	[ ] Inventory Types can define buttons
-	[ ] Selection of slots in non-scrolling inventory UIs
 	[ ] Combine candies in PlayerScience inventory to make new candies
 	[ ] Add a shop where you can buy and sell things
 	[ ] "Tools" in the player inventory UI
@@ -22,6 +21,8 @@
 	[ ] Pathway tiles and walls for decoration
 	( ) Double tap to run shouldn't work if you quickly press different directions (Left Up Left for example)
 
+[X] Selection of slots in non-scrolling inventory UIs
+[X] Put items from your inventory into the science slots
 [X] Show item name next to selected item in scroll inventory
 [X] +1 item popup when mining, some display to show how many of that item you have in your inventory
 [X] Double tap arrow key to run

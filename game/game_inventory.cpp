@@ -52,6 +52,76 @@ u8 TryAddItemStackToInventory(Inventory_t* inventory, ItemStack_t stack)
 	return countLeft;
 }
 
+InvSlot_t* GetInvSlotAtGridPos(Inventory_t* inventory, v2i gridPos)
+{
+	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
+	{
+		InvSlot_t* slot = &inventory->slots[sIndex];
+		if (slot->gridPos == gridPos) { return slot; }
+	}
+	return nullptr;
+}
+InvSlot_t* GetInvSlotMaxOrMinInRow(Inventory_t* inventory, i32 row, bool findMax)
+{
+	InvSlot_t* result = nullptr;
+	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
+	{
+		InvSlot_t* slot = &inventory->slots[sIndex];
+		if (slot->gridPos.y == row)
+		{
+			if (result == nullptr) { result = slot; }
+			else if (slot->gridPos.x > result->gridPos.x && findMax) { result = slot; }
+			else if (slot->gridPos.x < result->gridPos.x && !findMax) { result = slot; }
+		}
+	}
+	return result;
+}
+InvSlot_t* GetInvSlotMaxOrMinInCol(Inventory_t* inventory, i32 column, bool findMax)
+{
+	InvSlot_t* result = nullptr;
+	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
+	{
+		InvSlot_t* slot = &inventory->slots[sIndex];
+		if (slot->gridPos.x == column)
+		{
+			if (result == nullptr) { result = slot; }
+			else if (slot->gridPos.y > result->gridPos.y && findMax) { result = slot; }
+			else if (slot->gridPos.y < result->gridPos.y && !findMax) { result = slot; }
+		}
+	}
+	return result;
+}
+
+InvSlot_t* InvMoveSelection(Inventory_t* inventory, InvSlot_t* selectedSlot, Dir2_t direction)
+{
+	Assert(direction != Dir2_None);
+	InvSlot_t* newSelectedSlot = nullptr;
+	
+	if (selectedSlot == nullptr)
+	{
+		selectedSlot = (inventory->numSlots > 0) ? &inventory->slots[0] : nullptr;
+	}
+	else
+	{
+		newSelectedSlot = GetInvSlotAtGridPos(inventory, selectedSlot->gridPos + ToVec2i(direction));
+		if (newSelectedSlot == nullptr)
+		{
+			if (direction == Dir2_Left)       { newSelectedSlot = GetInvSlotMaxOrMinInRow(inventory, selectedSlot->gridPos.y, true);  }
+			else if (direction == Dir2_Right) { newSelectedSlot = GetInvSlotMaxOrMinInRow(inventory, selectedSlot->gridPos.y, false); }
+			else if (direction == Dir2_Up)    { newSelectedSlot = GetInvSlotMaxOrMinInCol(inventory, selectedSlot->gridPos.x, true);  }
+			else if (direction == Dir2_Down)  { newSelectedSlot = GetInvSlotMaxOrMinInCol(inventory, selectedSlot->gridPos.x, false); }
+		}
+	}
+	
+	if (newSelectedSlot != nullptr && newSelectedSlot != selectedSlot)
+	{
+		selectedSlot = newSelectedSlot;
+		inventory->selectionIndex = (i64)newSelectedSlot->index;
+	}
+	
+	return selectedSlot;
+}
+
 void FreeInventory(Inventory_t* inventory)
 {
 	NotNull(inventory);
@@ -88,10 +158,9 @@ void OnOpenInventory(Inventory_t* inventory, bool scrollView)
 	inventory->showCrankHint = true;
 }
 
-void UpdateInventory(Inventory_t* inventory)
+void UpdateInventory(Inventory_t* inventory, Inventory_t* otherInventory)
 {
 	NotNull2(inventory, inventory->allocArena);
-	
 	
 	if (inventory->inScrollView)
 	{
@@ -154,6 +223,27 @@ void UpdateInventory(Inventory_t* inventory)
 			else { UpdateAnimationDown(&slot->selectedAnimProgress, INV_SLOT_GROW_BIG_ANIM_TIME); }
 			slotOffset.y += slot->mainRec.height + INV_SLOT_MARGIN;
 		}
+		
+		// +==============================+
+		// |      Btn_A Swaps Stacks      |
+		// +==============================+
+		if (BtnPressed(Btn_A) && otherInventory != nullptr && !otherInventory->inScrollView)
+		{
+			HandleBtnExtended(Btn_A);
+			if (inventory->selectionIndex >= 0 && (u64)inventory->selectionIndex < inventory->numSlots)
+			{
+				InvSlot_t* ourSelectedSlot = &inventory->slots[inventory->selectionIndex];
+				if (otherInventory->selectionIndex >= 0 && (u64)otherInventory->selectionIndex < otherInventory->numSlots)
+				{
+					InvSlot_t* otherSelectedSlot = &otherInventory->slots[otherInventory->selectionIndex];
+					
+					ItemStack_t tempStack;
+					MyMemCopy(&tempStack, &otherSelectedSlot->stack, sizeof(ItemStack_t));
+					MyMemCopy(&otherSelectedSlot->stack, &ourSelectedSlot->stack, sizeof(ItemStack_t));
+					MyMemCopy(&ourSelectedSlot->stack, &tempStack, sizeof(ItemStack_t));
+				}
+			}
+		}
 	}
 	else
 	{
@@ -170,15 +260,38 @@ void UpdateInventory(Inventory_t* inventory)
 			ScreenSize.width / 2 - inventory->mainRec.width/2,
 			ScreenSize.height / 2 - inventory->mainRec.height/2
 		);
+		
+		InvSlot_t* selectedSlot = nullptr;
+		if (inventory->selectionIndex >= 0 && (u64)inventory->selectionIndex < inventory->numSlots) { selectedSlot = &inventory->slots[inventory->selectionIndex]; }
+		
+		for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
+		{
+			InvSlot_t* slot = &inventory->slots[sIndex];
+			slot->isSelected = (inventory->selectionIndex >= 0 && (u64)inventory->selectionIndex == sIndex);
+		}
+		
+		if (BtnPressed(Btn_Left))  { HandleBtnExtended(Btn_Left);  selectedSlot = InvMoveSelection(inventory, selectedSlot, Dir2_Left);  }
+		if (BtnPressed(Btn_Right)) { HandleBtnExtended(Btn_Right); selectedSlot = InvMoveSelection(inventory, selectedSlot, Dir2_Right); }
+		if (BtnPressed(Btn_Up))    { HandleBtnExtended(Btn_Up);    selectedSlot = InvMoveSelection(inventory, selectedSlot, Dir2_Up);    }
+		if (BtnPressed(Btn_Down))  { HandleBtnExtended(Btn_Down);  selectedSlot = InvMoveSelection(inventory, selectedSlot, Dir2_Down);  }
 	}
 }
 
-void RenderInventorySlot(InvSlot_t* slot, reci slotRec)
+void RenderInventorySlot(InvSlot_t* slot, reci slotRec, bool inScrollView)
 {
 	MemArena_t* scratch = GetScratchArena();
 	
 	PdDrawRec(slotRec, kColorWhite);
 	PdDrawRecOutline(slotRec, 2, kColorBlack);
+	
+	if (slot->isSelected && !inScrollView)
+	{
+		r32 selectionRotation = Animate(0.0f, 1.0f, 2000);
+		PdDrawRecOutlineArc(slotRec, 5, selectionRotation + 0.00f, selectionRotation + 0.00f + 0.125f, kColorBlack);
+		PdDrawRecOutlineArc(slotRec, 5, selectionRotation + 0.25f, selectionRotation + 0.25f + 0.125f, kColorBlack);
+		PdDrawRecOutlineArc(slotRec, 5, selectionRotation + 0.50f, selectionRotation + 0.50f + 0.125f, kColorBlack);
+		PdDrawRecOutlineArc(slotRec, 5, selectionRotation + 0.75f, selectionRotation + 0.75f + 0.125f, kColorBlack);
+	}
 	
 	if (slot->stack.count > 0)
 	{
@@ -231,7 +344,7 @@ void RenderInventoryUi(Inventory_t* inventory)
 			// if (slot->isSelected) { slotRec.y += (largeSlotDiff - slotSizeDiff) / 2; }
 			slotRec.width += slotSizeDiff;
 			slotRec.height += slotSizeDiff;
-			RenderInventorySlot(slot, slotRec);
+			RenderInventorySlot(slot, slotRec, inventory->inScrollView);
 			slotOffset.y += slotRec.height + INV_SLOT_MARGIN;
 		}
 		
@@ -278,7 +391,7 @@ void RenderInventoryUi(Inventory_t* inventory)
 		{
 			InvSlot_t* slot = &inventory->slots[sIndex];
 			reci slotRec = slot->mainRec + contentRec.topLeft;
-			RenderInventorySlot(slot, slotRec);
+			RenderInventorySlot(slot, slotRec, inventory->inScrollView);
 		}
 	}
 }

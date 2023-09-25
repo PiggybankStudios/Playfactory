@@ -95,8 +95,8 @@ void UpdateAppState_Game()
 	// +==============================+
 	// |   Update Open Inventories    |
 	// +==============================+
-	if (game->openInventory != nullptr) { UpdateInventory(game->openInventory); }
-	if (game->openScrollInventory != nullptr) { UpdateInventory(game->openScrollInventory); }
+	if (game->openInventory != nullptr) { UpdateInventory(game->openInventory, game->openScrollInventory); }
+	if (game->openScrollInventory != nullptr) { UpdateInventory(game->openScrollInventory, game->openInventory); }
 	
 	UpdatePlayer(&game->player, &game->world);
 	UpdateGameView(&game->view, game->player.position, ToVec2(game->player.inputDir), game->world.size * TILE_SIZE);
