@@ -8,7 +8,7 @@ Description:
 	** Each type of inventory gets to decide how these slots are arranged and grouped.
 */
 
-InvSlot_t* _TwoPassAddInvSlot(InvSlot_t* slots, u64 numSlots, u64* slotIndex, u64 groupId, v2i gridPos, v2i position)
+InvSlot_t* _TwoPassAddInvSlot(InvSlot_t* slots, u64 numSlots, u64* slotIndex, InvSlotType_t type, u64 groupId, v2i gridPos, v2i position)
 {
 	InvSlot_t* result = nullptr;
 	if (slots != nullptr)
@@ -17,11 +17,20 @@ InvSlot_t* _TwoPassAddInvSlot(InvSlot_t* slots, u64 numSlots, u64* slotIndex, u6
 		result = &slots[*slotIndex];
 		ClearPointer(result);
 		result->index = *slotIndex;
+		result->type = type;
 		result->groupId = groupId;
 		result->gridPos = gridPos;
 		result->stack = NewItemStack(ItemId_None, 0);
 		result->mainRec.topLeft = position;
 		result->mainRec.size = Vec2iFill(INV_SLOT_SIZE);
+		if (type == InvSlotType_Button)
+		{
+			result->mainRec.height = game->mainFont.lineHeight + 2*2;
+		}
+		else if (type == InvSlotType_ToolBtn)
+		{
+			result->mainRec.size = Vec2iFill(INV_TOOL_BTN_SIZE);
+		}
 	}
 	*slotIndex = (*slotIndex) + 1;
 	return result;
@@ -29,8 +38,8 @@ InvSlot_t* _TwoPassAddInvSlot(InvSlot_t* slots, u64 numSlots, u64* slotIndex, u6
 
 InvSlot_t* GetInvSlotsForInvType(InvType_t type, MemArena_t* memArena, u64* numSlotsOut)
 {
-	#define AddInvSlot(groupId, gridPos, position) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, (groupId), (gridPos), (position))
-	#define AddInvSlotSimple(groupId, gridPos) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, (groupId), (gridPos), Vec2iMultiply((gridPos), Vec2iFill(INV_SLOT_SIZE + INV_SLOT_MARGIN)))
+	#define AddInvSlot(type, groupId, gridPos, position) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, (type), (groupId), (gridPos), (position))
+	#define AddInvSlotSimple(groupId, gridPos) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, InvSlotType_Default, (groupId), (gridPos), Vec2iMultiply((gridPos), Vec2iFill(INV_SLOT_SIZE + INV_SLOT_MARGIN)))
 	
 	#define TwoPassAddSlotLoopStart() for (pass = 0; pass < 2; pass++)
 	#define TwoPassAddSlotLoopEnd() do                                    \
@@ -75,6 +84,8 @@ InvSlot_t* GetInvSlotsForInvType(InvType_t type, MemArena_t* memArena, u64* numS
 				slotIndex = 0;
 				AddInvSlotSimple(0, NewVec2i(0, 0));
 				AddInvSlotSimple(0, NewVec2i(1, 0));
+				i32 slotSize = (INV_SLOT_SIZE + INV_SLOT_MARGIN);
+				AddInvSlot(InvSlotType_Button, 1, NewVec2i(1, 1), NewVec2i(1 * slotSize, 1 * slotSize));
 				TwoPassAddSlotLoopEnd();
 			}
 		} break;

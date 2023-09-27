@@ -229,18 +229,20 @@ void UpdateInventory(Inventory_t* inventory, Inventory_t* otherInventory)
 		// +==============================+
 		if (BtnPressed(Btn_A) && otherInventory != nullptr && !otherInventory->inScrollView)
 		{
-			HandleBtnExtended(Btn_A);
 			if (inventory->selectionIndex >= 0 && (u64)inventory->selectionIndex < inventory->numSlots)
 			{
 				InvSlot_t* ourSelectedSlot = &inventory->slots[inventory->selectionIndex];
 				if (otherInventory->selectionIndex >= 0 && (u64)otherInventory->selectionIndex < otherInventory->numSlots)
 				{
 					InvSlot_t* otherSelectedSlot = &otherInventory->slots[otherInventory->selectionIndex];
-					
-					ItemStack_t tempStack;
-					MyMemCopy(&tempStack, &otherSelectedSlot->stack, sizeof(ItemStack_t));
-					MyMemCopy(&otherSelectedSlot->stack, &ourSelectedSlot->stack, sizeof(ItemStack_t));
-					MyMemCopy(&ourSelectedSlot->stack, &tempStack, sizeof(ItemStack_t));
+					if (ourSelectedSlot->type == InvSlotType_Default && otherSelectedSlot->type == InvSlotType_Default)
+					{
+						HandleBtnExtended(Btn_A);
+						ItemStack_t tempStack;
+						MyMemCopy(&tempStack, &otherSelectedSlot->stack, sizeof(ItemStack_t));
+						MyMemCopy(&otherSelectedSlot->stack, &ourSelectedSlot->stack, sizeof(ItemStack_t));
+						MyMemCopy(&ourSelectedSlot->stack, &tempStack, sizeof(ItemStack_t));
+					}
 				}
 			}
 		}
