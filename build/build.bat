@@ -45,7 +45,11 @@ if errorlevel 1 (
 
 rem call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
 rem call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64 -no_logo
-call "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat" -arch=x64 -host_arch=x64
+if "%CompuerName%"=="BUTTER_COMP" (
+	call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat" -arch=x64 -host_arch=x64
+) else (
+	call "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat" -arch=x64 -host_arch=x64
+)
 
 set CompilerFlags=/D "PLAYDATE_COMPILATION" /D "PROJECT_NAME=\"%ProjectName%\"" /D "PROJECT_NAME_SAFE=\"%ProjectNameSafe%\"" /D "DEBUG_BUILD=%DebugBuild%" /D "DEVELOPER_BUILD=%DeveloperBuild%" /D "DEMO_BUILD=%DemoBuild%" /D "STEAM_BUILD=0" /D "PROCMON_SUPPORTED=0" /D "SOCKETS_SUPPORTED=0" /D "BOX2D_SUPPORTED=0" /D "OPENGL_SUPPORTED=0" /D "VULKAN_SUPPORTED=0" /D "DIRECTX_SUPPORTED=0" /D "SLUG_SUPPORTED=0" /D "JSON_SUPPORTED=0" /D "ASSERTIONS_ENABLED=%AssertionsEnabled%"
 set CompilerFlags=%CompilerFlags% /D "_WINDLL" /D "_MBCS" /D "WIN32" /D "_WINDOWS" /D "TARGET_SIMULATOR=1" /D "_WINDLL=1" /D "TARGET_EXTENSION=1"
