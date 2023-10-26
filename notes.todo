@@ -1,7 +1,20 @@
 
+# Short TODO List:
+	[ ] Combine candies in PlayerScience inventory to make new candies
+	[ ] Add a store you can purchase things from
+	[ ] Add support for selecting items into your hand, and placing them in the world
+	[ ] Get auto-miners working
+	[ ] Get pipes working (and selling to store)
+	[ ] Add combiner
+	[ ] Add destructible obstacles in the world
+	[ ] Add research station
+	[ ] Add research tree that research station allows viewing
+	[ ] Add chest and extractor
+	[ ] Add pickaxe to get to lower level
+	[ ] Add augmented pipes
+
 # TODO List:
 	[ ] Inventory Types can define buttons
-	[ ] Combine candies in PlayerScience inventory to make new candies
 	[ ] Add a shop where you can buy and sell things
 	[ ] "Tools" in the player inventory UI
 	[ ] Somehow you need to be able to choose an item to put in your hand

@@ -14,6 +14,7 @@ Date:   09\08\2023
 
 #include "game_particles.h"
 #include "game_item_ids.h"
+#include "game_recipes.h"
 #include "game_tile_types.h"
 #include "game_inv_types.h"
 #include "game_inventory.h"

@@ -3,16 +3,9 @@ File:   game_main.cpp
 Author: Taylor Robbins
 Date:   09\10\2023
 Description: 
-	** None 
+	** Includes every other app state .cpp file and also contains functions like InitGame
+	** which are called by pig_main.cpp. The app state .h files are included by game_main.h
 */
-
-// +--------------------------------------------------------------+
-// |                         Header Files                         |
-// +--------------------------------------------------------------+
-#include "game_version.h"
-#include "main_menu.h"
-#include "game_state.h"
-#include "game_main.h"
 
 // +--------------------------------------------------------------+
 // |                           Globals                            |
@@ -40,6 +33,21 @@ AppState_t InitGame()
 	gl = AllocStruct(fixedHeap, GameGlobals_t);
 	ClearPointer(gl);
 	gl->initialized = true;
+	if (!TryLoadAllRecipes(&gl->recipeBook, mainHeap))
+	{
+		PrintLine_E("Failed to load recipes!");
+		DebugAssertMsg(false, "Failed to load recipes!");
+		//TODO: Should we do some sort of initialization failure?
+	}
+	
+	#if 1
+	PrintLine_D("There %s %llu recipe%s in the game", PluralEx(gl->recipeBook.recipes.length, "is", "are"), gl->recipeBook.recipes.length, Plural(gl->recipeBook.recipes.length, "s"));
+	VarArrayLoop(&gl->recipeBook.recipes, rIndex)
+	{
+		VarArrayLoopGet(Recipe_t, recipe, &gl->recipeBook.recipes, rIndex);
+		PrintLine_D("Recipe[%llu]: %s + %s = %s", rIndex, GetItemIdStr(recipe->item1), GetItemIdStr(recipe->item2), GetItemIdStr(recipe->output));
+	}
+	#endif
 	
 	gl->titleFont = LoadFont(NewStr("Resources/Fonts/SpaceContract"));
 	Assert(gl->titleFont.isValid);

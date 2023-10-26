@@ -1,0 +1,5 @@
+# Recipe Book
+
+Include: Resources/Text/recipes_surface.txt
+Include: Resources/Text/recipes_underground.txt
+Include: Resources/Text/recipes_sky.txt

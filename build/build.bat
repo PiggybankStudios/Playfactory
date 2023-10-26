@@ -80,7 +80,9 @@ set IncludeDirectories=/I"%EngineSourceDirectory%" /I"%GameSourceDirectory%" /I"
 set LinkerFlags=/MANIFEST /NXCOMPAT /DYNAMICBASE /DEBUG /DLL /MACHINE:X64 /INCREMENTAL /SUBSYSTEM:CONSOLE /ERRORREPORT:PROMPT /NOLOGO /TLBID:1
 set LinkerFlags=%LinkerFlags% /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /ManifestFile:"%OutputDllName%.intermediate.manifest" /LTCGOUT:"%ProjectNameSafe%.iobj" /ILK:"%ProjectNameSafe%.ilk"
 set Libraries="kernel32.lib" "user32.lib" "gdi32.lib" "winspool.lib" "shell32.lib" "ole32.lib" "oleaut32.lib" "uuid.lib" "comdlg32.lib" "advapi32.lib"
-set PdcFlags=-k -sdkpath "%PlaydateSdkDirectory%"
+rem -k = Skip unknown file types (Removed because we have .txt files)
+rem -q = Suppress non-error output (Optional)
+set PdcFlags=-q -sdkpath "%PlaydateSdkDirectory%"
 
 if "%PythonInstalled%"=="1" (
 	python %IncVersNumScriptPath% %EngineVersionFilePath%
