@@ -85,7 +85,12 @@ InvSlot_t* GetInvSlotsForInvType(InvType_t type, MemArena_t* memArena, u64* numS
 				AddInvSlotSimple(0, NewVec2i(0, 0));
 				AddInvSlotSimple(0, NewVec2i(1, 0));
 				i32 slotSize = (INV_SLOT_SIZE + INV_SLOT_MARGIN);
-				AddInvSlot(InvSlotType_Button, 1, NewVec2i(1, 1), NewVec2i(1 * slotSize, 1 * slotSize));
+				InvSlot_t* buttonSlot = AddInvSlot(InvSlotType_Button, 1, NewVec2i(1, 1), NewVec2i(1 * slotSize - 15, 1 * slotSize));
+				if (buttonSlot != nullptr)
+				{
+					buttonSlot->button = InvButton_Combine;
+					buttonSlot->mainRec.width += 15;
+				}
 				TwoPassAddSlotLoopEnd();
 			}
 		} break;

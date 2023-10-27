@@ -54,13 +54,14 @@ Recipe_t* AddRecipeToBook(RecipeBook_t* book, Recipe_t recipe)
 	return result;
 }
 
-Recipe_t* FindRecipeInBook(RecipeBook_t* book, ItemId_t item1, ItemId_t item2)
+Recipe_t* FindRecipeInBook(RecipeBook_t* book, ItemId_t item1, ItemId_t item2, bool respectOrder = false)
 {
 	NotNull(book);
 	VarArrayLoop(&book->recipes, rIndex)
 	{
 		VarArrayLoopGet(Recipe_t, recipe, &book->recipes, rIndex);
 		if (recipe->item1 == item1 && recipe->item2 == item2) { return recipe; }
+		else if (!respectOrder && recipe->item1 == item2 && recipe->item2 == item1) { return recipe; }
 	}
 	return nullptr;
 }

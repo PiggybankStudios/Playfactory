@@ -147,7 +147,7 @@ void InitWorld(World_t* world, MemArena_t* memArena, v2i size, u64 seed)
 			tile->type = TileType_None;
 			if (GetRandR32(&world->genRand) < WORLD_GEN_CANDY_DENSITY)
 			{
-				tile->type = (TileType_t)(TileType_Peppermint + GetRandU32(&pig->random, 0, 4));
+				tile->type = (TileType_t)(TileType_Sugar + GetRandU32(&pig->random, 0, 4));
 			}
 			else if (GetRandR32(&world->genRand) < WORLD_GEN_GRASS_DENSITY)
 			{
@@ -177,7 +177,7 @@ void RenderWorld(World_t* world, const Player_t* player)
 			v2i tilePos = NewVec2i(tilePosX, tilePosY);
 			WorldTile_t* tile = GetWorldTileAt(world, tilePos);
 			reci tileRec = NewReci(tilePosX * TILE_SIZE, tilePosY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-			v2i tileFrame = GetTileTypeFrame(tile->type, true, tilePos);
+			v2i tileFrame = GetTileTypeFrame(tile->type, tilePos);
 			if (tileFrame != NewVec2i(-1, -1))
 			{
 				PdDrawSheetFrame(game->entitiesSheet, tileFrame, tileRec);

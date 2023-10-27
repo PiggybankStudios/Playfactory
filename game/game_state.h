@@ -8,6 +8,8 @@ Date:   09\08\2023
 #define _GAME_H
 
 #define MAIN_FONT_PATH         "/System/Fonts/Asheville-Sans-14-Bold.pft"
+#define BUTTON_FONT_PATH       "Resources/Fonts/pixel8"
+#define ITEM_COUNT_FONT_PATH   "Resources/Fonts/blocky"
 #define DEFAULT_WORLD_SIZE     NewVec2i(100, 100)
 #define DEFAULT_WORLD_SEED     1
 #define GAME_MAX_NUM_PARTICLES 300
@@ -27,6 +29,7 @@ struct GameState_t
 	bool initialized;
 	
 	Font_t mainFont;
+	Font_t buttonFont;
 	Font_t itemCountFont;
 	Texture_t pigTexture;
 	Sound_t testSound;

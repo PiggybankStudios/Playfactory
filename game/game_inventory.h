@@ -38,6 +38,30 @@ const char* GetInvSlotTypeStr(InvSlotType_t enumValue)
 	}
 }
 
+enum InvButton_t
+{
+	InvButton_None = 0,
+	InvButton_Combine,
+	InvButton_NumButtons,
+};
+const char* GetInvButtonStr(InvButton_t enumValue)
+{
+	switch (enumValue)
+	{
+		case InvButton_None:    return "None";
+		case InvButton_Combine: return "Combine";
+		default: return "Unknown";
+	}
+}
+const char* GetInvButtonDisplayStr(InvButton_t enumValue)
+{
+	switch (enumValue)
+	{
+		case InvButton_Combine: return "Combine";
+		default: return "?";
+	}
+}
+
 struct InvSlot_t
 {
 	u64 index;
@@ -45,6 +69,7 @@ struct InvSlot_t
 	InvSlotType_t type;
 	v2i gridPos;
 	ItemStack_t stack;
+	InvButton_t button;
 	bool isSelected;
 	r32 selectedAnimProgress;
 	reci mainRec; //only size is used when in scrollView mode
@@ -53,6 +78,7 @@ struct InvSlot_t
 struct Inventory_t
 {
 	MemArena_t* allocArena;
+	InvType_t type;
 	
 	u64 numSlots;
 	InvSlot_t* slots;

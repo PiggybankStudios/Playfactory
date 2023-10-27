@@ -137,6 +137,7 @@ void InitInventory(Inventory_t* inventory, MemArena_t* memArena, InvType_t type)
 	NotNull2(inventory, memArena);
 	ClearPointer(inventory);
 	inventory->allocArena = memArena;
+	inventory->type = type;
 	inventory->slots = GetInvSlotsForInvType(type, inventory->allocArena, &inventory->numSlots);
 	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
 	{
@@ -276,6 +277,74 @@ void UpdateInventory(Inventory_t* inventory, Inventory_t* otherInventory)
 		if (BtnPressed(Btn_Right)) { HandleBtnExtended(Btn_Right); selectedSlot = InvMoveSelection(inventory, selectedSlot, Dir2_Right); }
 		if (BtnPressed(Btn_Up))    { HandleBtnExtended(Btn_Up);    selectedSlot = InvMoveSelection(inventory, selectedSlot, Dir2_Up);    }
 		if (BtnPressed(Btn_Down))  { HandleBtnExtended(Btn_Down);  selectedSlot = InvMoveSelection(inventory, selectedSlot, Dir2_Down);  }
+		
+		// +==============================+
+		// |    Btn_A Presses Buttons     |
+		// +==============================+
+		if (BtnPressedRaw(Btn_A))
+		{
+			if (inventory->selectionIndex >= 0 && (u64)inventory->selectionIndex < inventory->numSlots)
+			{
+				InvSlot_t* selectedSlot = &inventory->slots[inventory->selectionIndex];
+				if (selectedSlot->type == InvSlotType_Button)
+				{
+					HandleBtnExtended(Btn_A);
+					
+					switch (selectedSlot->button)
+					{
+						// +==============================+
+						// |   Press InvButton_Combine    |
+						// +==============================+
+						case InvButton_Combine:
+						{
+							InvSlot_t* slot1 = GetInvSlotAtGridPos(inventory, NewVec2i(0, 0));
+							InvSlot_t* slot2 = GetInvSlotAtGridPos(inventory, NewVec2i(1, 0));
+							if (slot1 != nullptr && slot2 != nullptr && slot1->stack.count > 0 && slot2->stack.count > 0)
+							{
+								bool successfulRecipe = false;
+								Recipe_t* recipe = FindRecipeInBook(&gl->recipeBook, slot1->stack.id, slot2->stack.id);
+								if (recipe != nullptr)
+								{
+									//otherInventory should be player's inventory
+									if (otherInventory != nullptr)
+									{
+										u8 numUnadded = TryAddItemStackToInventory(otherInventory, NewItemStack(recipe->output, 1));
+										if (numUnadded == 0)
+										{
+											successfulRecipe = true;
+											Particle_t* newPart = TrySpawnParticle(
+												&game->parts,
+												PartLayer_HighUi,
+												ToVec2(inventory->mainRec.topLeft + selectedSlot->mainRec.topLeft) + ToVec2(selectedSlot->mainRec.size) / 2,
+												NewVec2(0, -1), //velocity
+												&game->entitiesSheet,
+												GetItemIdFrame(recipe->output),
+												1000 //lifespan
+											);
+											// PrintLine_D("Spawned particle (%d, %d) at (%g, %g)", newPart->frame.x, newPart->frame.y, newPart->position.x, newPart->position.y);
+											UNUSED(newPart);
+										}
+										
+									}
+								}
+								
+								UNUSED(successfulRecipe);
+								//Whether a recipe exists or not, we should consume the inputs and pay the cost
+								//TODO: Make the player pay some money to try the combination
+								//TODO: Play a sound effect based on success/failure
+								
+								slot1->stack.count--;
+								if (slot1->stack.count == 0) { slot1->stack.id = ItemId_None; }
+								slot2->stack.count--;
+								if (slot2->stack.count == 0) { slot2->stack.id = ItemId_None; }
+							}
+						} break;
+						
+						default: PrintLine_E("Unhandled InvButton_t enum value: 0x%X %u", selectedSlot->button, selectedSlot->button); break;
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -295,27 +364,47 @@ void RenderInventorySlot(InvSlot_t* slot, reci slotRec, bool inScrollView)
 		PdDrawRecOutlineArc(slotRec, 5, selectionRotation + 0.75f, selectionRotation + 0.75f + 0.125f, kColorBlack);
 	}
 	
-	if (slot->stack.count > 0)
+	// +==============================+
+	// |  Render InvSlotType_Default  |
+	// +==============================+
+	if (slot->type == InvSlotType_Default)
 	{
-		v2i itemFrame = GetItemIdFrame(slot->stack.id);
-		if (itemFrame != NewVec2i(-1, -1))
+		if (slot->stack.count > 0)
 		{
-			reci itemRec = NewReci(
-				slotRec.x + slotRec.width/2 - INV_ITEM_SIZE/2,
-				slotRec.y + slotRec.height/2 - INV_ITEM_SIZE/2,
-				INV_ITEM_SIZE,
-				INV_ITEM_SIZE
-			);
-			PdDrawSheetFrame(game->entitiesSheet, itemFrame, itemRec);
+			v2i itemFrame = GetItemIdFrame(slot->stack.id);
+			if (itemFrame != NewVec2i(-1, -1))
+			{
+				reci itemRec = NewReci(
+					slotRec.x + slotRec.width/2 - INV_ITEM_SIZE/2,
+					slotRec.y + slotRec.height/2 - INV_ITEM_SIZE/2,
+					INV_ITEM_SIZE,
+					INV_ITEM_SIZE
+				);
+				PdDrawSheetFrame(game->entitiesSheet, itemFrame, itemRec);
+			}
+			
+			MyStr_t countStr = PrintInArenaStr(scratch, "%u", slot->stack.count);
+			v2i countStrSize = MeasureText(game->itemCountFont.font, countStr);
+			v2i countStrPos = slotRec.topLeft + slotRec.size - NewVec2i(5, 2) - countStrSize;
+			PdBindFont(&game->itemCountFont);
+			// LCDBitmapDrawMode oldDrawMode = PdSetDrawMode(kDrawModeNXOR);
+			PdDrawText(countStr, countStrPos);
+			// PdSetDrawMode(oldDrawMode);
 		}
-		
-		MyStr_t countStr = PrintInArenaStr(scratch, "%u", slot->stack.count);
-		v2i countStrSize = MeasureText(game->itemCountFont.font, countStr);
-		v2i countStrPos = slotRec.topLeft + slotRec.size - NewVec2i(5, 2) - countStrSize;
-		PdBindFont(&game->itemCountFont);
-		// LCDBitmapDrawMode oldDrawMode = PdSetDrawMode(kDrawModeNXOR);
-		PdDrawText(countStr, countStrPos);
-		// PdSetDrawMode(oldDrawMode);
+	}
+	// +==============================+
+	// |  Render InvSlotType_Button   |
+	// +==============================+
+	else if (slot->type == InvSlotType_Button)
+	{
+		PdBindFont(&game->buttonFont);
+		MyStr_t displayStr = NewStr(GetInvButtonDisplayStr(slot->button));
+		v2i displayStrSize = MeasureText(game->buttonFont.font, displayStr);
+		v2i textPos = NewVec2i(
+			slotRec.x + slotRec.width/2 - displayStrSize.width/2,
+			slotRec.y + slotRec.height/2 - displayStrSize.height/2
+		);
+		PdDrawText(displayStr, textPos);
 	}
 	
 	FreeScratchArena(scratch);
