@@ -1,6 +1,5 @@
 
 # Short TODO List:
-	[ ] Combine candies in PlayerScience inventory to make new candies
 	[ ] Add a store you can purchase things from
 	[ ] Add support for selecting items into your hand, and placing them in the world
 	[ ] Get auto-miners working
@@ -34,6 +33,7 @@
 	[ ] Pathway tiles and walls for decoration
 	( ) Double tap to run shouldn't work if you quickly press different directions (Left Up Left for example)
 
+[X] Combine candies in PlayerScience inventory to make new candies
 [X] Selection of slots in non-scrolling inventory UIs
 [X] Put items from your inventory into the science slots
 [X] Show item name next to selected item in scroll inventory

@@ -1,3 +1,29 @@
 # Recipe Book
 
-Recipe: Peppermint, Strawberry, Caramel
+// Level (1)
+Recipe: Mining, Mining, Sugar
+Recipe: Mining, Mining, Dough
+Recipe: Mining, Mining, Fruit
+Recipe: Mining, Mining, Mint
+
+// Level (2)
+Recipe: Sugar, Sugar, PowderSugar
+Recipe: Fruit, Fruit, Jam
+Recipe: Fruit, Sugar, Apple
+Recipe: Mint, Mint, Ice
+Recipe: Sugar, Dough, Cookie
+Recipe: Sugar, Mint, CandyCane
+Recipe: Dough, Mint, Gum
+
+// Level (3)
+Recipe: Dough, PowderSugar, Cake
+Recipe: Dough, Jam, Donut
+Recipe: Fruit, PowderSugar, CandiedFruit
+Recipe: Fruit, Gum, FruitGum
+Recipe: Dough, Apple, ApplePie
+
+// Level (4)
+Recipe: PowderSugar, PowderSugar, CottonCandy
+Recipe: Fruit, Cake, FruitCake
+Recipe: Gum, CandyCane, Gumball
+Recipe: Jam, Ice, Jello
