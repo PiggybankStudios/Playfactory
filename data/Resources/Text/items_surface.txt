@@ -6,18 +6,22 @@
 Item: Sugar
 	Display: Sugar Pile, Sugar Piles
 	Frame: (0, 6)
+	Value: 1
 
 Item: Dough
 	Display: Dough Ball, Dough Balls
 	Frame: (1, 6)
+	Value: 3
 
 Item: Fruit
 	Display: Fruit, Fruit
 	Frame: (2, 6)
+	Value: 2
 
 Item: Mint
 	Display: Mint, Mints
 	Frame: (3, 6)
+	Value: 4
 
 // +==============================+
 // |            Tiles             |
@@ -52,24 +56,38 @@ Item: MintTile
 Item: PowderSugar
 	Display: Powder Sugar, Powder Sugar
 	Frame: (4, 6)
+	Value: 2
+	Value: 10 //TODO:
+
 Item: Gum
 	Display: Gum, Gum
 	Frame: (5, 6)
+	Value: 10 //TODO:
+
 Item: Apple
 	Display: Apple, Apples
 	Frame: (6, 6)
+	Value: 10 //TODO:
+
 Item: Jam
 	Display: Jam, Jam
 	Frame: (7, 6)
+	Value: 10 //TODO:
+
 Item: CandyCane
 	Display: Candy Cane, Candy Canes
 	Frame: (5, 7)
+	Value: 10 //TODO:
+
 Item: Cookie
 	Display: Cookie, Cookies
 	Frame: (7, 7)
+	Value: 10 //TODO:
+
 Item: Ice
 	Display: Ice, Ice
 	Frame: (3, 7)
+	Value: 10 //TODO:
 
 // +==============================+
 // |            Tier 3            |
@@ -77,18 +95,27 @@ Item: Ice
 Item: Cake
 	Display: Cake, Cakes
 	Frame: (4, 7)
+	Value: 20 //TODO:
+
 Item: Donut
 	Display: Donut, Donuts
 	Frame: (6, 7)
+	Value: 20 //TODO:
+
 Item: CandiedFruit
 	Display: Candied Fruit, Candied Fruit
 	Frame: (0, 0) //TODO:
+	Value: 20 //TODO:
+
 Item: FruitGum
 	Display: Fruit Gum, Fruit Gum
 	Frame: (0, 0) //TODO:
+	Value: 20 //TODO:
+
 Item: ApplePie
 	Display: Apple Pie, Apple Pies
 	Frame: (0, 0) //TODO:
+	Value: 20 //TODO:
 
 // +==============================+
 // |            Tier 4            |
@@ -96,12 +123,19 @@ Item: ApplePie
 Item: CottonCandy
 	Display: Cotton Candy, Cotton Candy
 	Frame: (0, 0) //TODO:
+	Value: 30 //TODO:
+
 Item: FruitCake
 	Display: Fruit Cake, Fruit Cakes
 	Frame: (0, 0) //TODO:
+	Value: 30 //TODO:
+
 Item: Gumball
 	Display: Gumball, Gumballs
 	Frame: (0, 0) //TODO:
+	Value: 30 //TODO:
+
 Item: Jello
 	Display: Jello, Jello
 	Frame: (0, 0) //TODO:
+	Value: 30 //TODO:

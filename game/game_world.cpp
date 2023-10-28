@@ -26,6 +26,21 @@ bool IsSolidWorldTileAt(World_t* world, v2i tilePos)
 	return world->tiles[tilePos.y * world->size.width + tilePos.x].isSolid;
 }
 
+void SetWorldTile(World_t* world, WorldTile_t* tilePntr, u16 itemId)
+{
+	NotNull2(world, tilePntr);
+	tilePntr->itemId = itemId;
+	tilePntr->isSolid = IsItemSolid(&gl->itemBook, itemId);
+}
+void SetWorldTileAt(World_t* world, v2i tilePos, u16 itemId)
+{
+	NotNull(world);
+	WorldTile_t* tile = GetWorldTileAt(world, tilePos);
+	AssertMsg(tile != nullptr, "Tried to set tile outside the bounds of the world!");
+	Assert(tile->pos == tilePos);
+	SetWorldTile(world, tile, itemId);
+}
+
 v2 ResolveWorldTileCollisions(World_t* world, rec colRec)
 {
 	rec resultRec = colRec;
@@ -144,21 +159,29 @@ void InitWorld(World_t* world, MemArena_t* memArena, v2i size, u64 seed)
 			v2i tilePos = NewVec2i(tilePosX, tilePosY);
 			WorldTile_t* tile = GetWorldTileAt(world, tilePos);
 			NotNull(tile);
-			tile->itemId = ITEM_ID_NONE;
+			tile->pos = tilePos;
+			
+			u16 generatedItemId = ITEM_ID_NONE;
 			if (GetRandR32(&world->genRand) < WORLD_GEN_CANDY_DENSITY)
 			{
 				ItemDef_t* spawnItemDef = GetRandomItemWithFlag(&gl->itemBook, ItemFlags_Surface|ItemFlags_Tile, ItemFlags_Decor);
-				if (spawnItemDef != nullptr) { tile->itemId = spawnItemDef->runtimeId; }
+				if (spawnItemDef != nullptr) { generatedItemId = spawnItemDef->runtimeId; }
 			}
 			else if (GetRandR32(&world->genRand) < WORLD_GEN_DECOR_DENSITY)
 			{
 				ItemDef_t* spawnItemDef = GetRandomItemWithFlag(&gl->itemBook, ItemFlags_Surface|ItemFlags_Tile|ItemFlags_Decor);
-				if (spawnItemDef != nullptr) { tile->itemId = spawnItemDef->runtimeId; }
+				if (spawnItemDef != nullptr) { generatedItemId = spawnItemDef->runtimeId; }
 			}
-			tile->isSolid = IsItemSolid(&gl->itemBook, tile->itemId);
-			tile->pos = tilePos;
+			SetWorldTile(world, tile, generatedItemId);
 		}
 	}
+	
+	v2i worldCenter = NewVec2i(world->size.width/2, world->size.height/2);
+	v2i storePos = worldCenter - Vec2i_One;
+	SetWorldTileAt(world, storePos + NewVec2i(0, 0), LookupRuntimeId(&gl->itemBook, NewStr("StoreTL")));
+	SetWorldTileAt(world, storePos + NewVec2i(1, 0), LookupRuntimeId(&gl->itemBook, NewStr("StoreTR")));
+	SetWorldTileAt(world, storePos + NewVec2i(0, 1), LookupRuntimeId(&gl->itemBook, NewStr("StoreBL")));
+	SetWorldTileAt(world, storePos + NewVec2i(1, 1), LookupRuntimeId(&gl->itemBook, NewStr("StoreBR")));
 }
 
 void UpdateWorld(World_t* world)

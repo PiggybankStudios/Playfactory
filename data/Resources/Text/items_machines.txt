@@ -1,0 +1,28 @@
+# Item Definitions
+
+Item: StoreTL
+	Flags: Tile, Solid
+	Display: Store, Store
+	Frame: (1, 0)
+	Inventory: Store
+Item: StoreTR
+	Flags: Tile, Solid
+	Display: Store, Store
+	Frame: (2, 0)
+	Inventory: Store
+Item: StoreBL
+	Flags: Tile, Solid
+	Display: Store, Store
+	Frame: (1, 1)
+	Inventory: Store
+Item: StoreBR
+	Flags: Tile, Solid
+	Display: Store, Store
+	Frame: (2, 1)
+	Inventory: Store
+
+Item: Drill
+	Flags: Tile, Solid, StoreBought
+	Display: Drill, Drills
+	Frame: (0, 2)
+	Cost: 15

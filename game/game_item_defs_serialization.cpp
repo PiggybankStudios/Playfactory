@@ -197,7 +197,18 @@ bool TryDeserItemBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* bookO
 			{
 				if (!TryParseV2i(token.value, &currentItem.frame, &parseFailureReason))
 				{
-					LogPrintLine_W(log, "Couldn't parse Frame \"%.*s\" as vec2i in %.*s line %llu", token.value.length, token.value.chars, log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+					LogPrintLine_W(log, "Couldn't parse Frame \"%.*s\" as vec2i (%s) in %.*s line %llu", token.value.length, token.value.chars, GetTryParseFailureReasonStr(parseFailureReason), log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+					log->hadWarnings = true;
+				}
+			}
+			// +==============================+
+			// |       Value/Cost/Worth       |
+			// +==============================+
+			else if (StrEqualsIgnoreCase(token.key, "Value") || StrEqualsIgnoreCase(token.key, "Cost") || StrEqualsIgnoreCase(token.key, "Worth"))
+			{
+				if (!TryParseU8(token.value, &currentItem.value, &parseFailureReason))
+				{
+					LogPrintLine_W(log, "Couldn't parse Cost \"%.*s\" as u8 (%s) in %.*s line %llu", token.value.length, token.value.chars, GetTryParseFailureReasonStr(parseFailureReason), log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
 					log->hadWarnings = true;
 				}
 			}
