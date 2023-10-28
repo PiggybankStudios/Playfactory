@@ -106,9 +106,9 @@ void UpdatePlayer(Player_t* player, World_t* world)
 	player->targetTile = GetWorldTileAt(world, player->targetTilePos);
 	
 	ItemStack_t targetDrop = {};
-	if (player->targetTile != nullptr) { targetDrop = GetTileTypeDrop(player->targetTile->type); }
+	if (player->targetTile != nullptr) { targetDrop = GetItemDrop(&gl->itemBook, player->targetTile->itemId); }
 	
-	if (targetDrop.count > 0 && targetDrop.id != ItemId_None && !isInventoryOpen)
+	if (targetDrop.count > 0 && targetDrop.id != ITEM_ID_NONE && !isInventoryOpen)
 	{
 		// +==============================+
 		// |    Btn_A to Start Mining     |
@@ -144,7 +144,7 @@ void UpdatePlayer(Player_t* player, World_t* world)
 					u8 numItemsAdded = targetDrop.count - numItemsLeft;
 					if (numItemsLeft > 0)
 					{
-						PrintLine_W("Couldn't find space for %u %s in the player inventory!", numItemsLeft, GetItemIdStr(targetDrop.id));
+						PrintLine_W("Couldn't find space for %u %s in the player inventory!", numItemsLeft, GetItemDisplayNameNt(&gl->itemBook, targetDrop.id));
 					}
 					if (numItemsAdded > 0)
 					{
@@ -154,7 +154,7 @@ void UpdatePlayer(Player_t* player, World_t* world)
 							targetTileCenter,
 							NewVec2(0, -1),
 							&game->entitiesSheet,
-							GetItemIdFrame(targetDrop.id),
+							GetItemFrame(&gl->itemBook, targetDrop.id),
 							1000
 						);
 						ParticleSetDisplayNumber(newPart, &game->itemCountFont, targetDrop.count);

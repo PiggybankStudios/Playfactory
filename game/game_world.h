@@ -7,16 +7,9 @@ Date:   09\10\2023
 #ifndef _GAME_WORLD_H
 #define _GAME_WORLD_H
 
-#define WORLD_GEN_GRASS_DENSITY 0.2f
-#define WORLD_GEN_CANDY_DENSITY 0.08f
-
-#define TILE_SIZE 24
-
-#define MAX_NUM_COLLISIONS_PER_FRAME   8
-
 struct WorldTile_t
 {
-	TileType_t type;
+	u16 itemId;
 	v2i pos;
 	bool isSolid;
 };

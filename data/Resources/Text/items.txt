@@ -1,0 +1,7 @@
+# Item Definitions
+
+Include: Resources/Text/items_meta.txt
+Include: Resources/Text/items_decor.txt
+Include: Resources/Text/items_surface.txt
+Include: Resources/Text/items_sky.txt
+Include: Resources/Text/items_underground.txt

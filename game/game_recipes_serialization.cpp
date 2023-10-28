@@ -30,7 +30,7 @@ const char* GetTryDeserRecipeBookErrorStr(TryDeserRecipeBookError_t enumValue)
 	}
 }
 
-bool TryDeserRecipeBook(MyStr_t fileContents, ProcessLog_t* log, RecipeBook_t* bookOut, MemArena_t* memArena, bool isInclude = false)
+bool TryDeserRecipeBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* itemBook, RecipeBook_t* bookOut, MemArena_t* memArena, bool isInclude = false)
 {
 	NotNullStr(&fileContents);
 	NotNull3(log, bookOut, memArena);
@@ -79,7 +79,7 @@ bool TryDeserRecipeBook(MyStr_t fileContents, ProcessLog_t* log, RecipeBook_t* b
 			// +==============================+
 			if (StrEqualsIgnoreCase(token.key, "Recipe"))
 			{
-				ItemId_t itemIds[3] = { ItemId_None, ItemId_None, ItemId_None };
+				u16 itemIds[3] = { ITEM_ID_NONE, ITEM_ID_NONE, ITEM_ID_NONE };
 				
 				PushMemMark(scratch);
 				u64 numPieces = 0;
@@ -88,24 +88,28 @@ bool TryDeserRecipeBook(MyStr_t fileContents, ProcessLog_t* log, RecipeBook_t* b
 				{
 					for (u64 pIndex = 0; pIndex < numPieces; pIndex++)
 					{
-						MyStr_t* piece = &pieces[pIndex];
-						TrimWhitespace(piece);
-						if (IsEmptyStr(*piece))
+						MyStr_t piece = pieces[pIndex];
+						TrimWhitespace(&piece);
+						if (IsEmptyStr(piece))
 						{
 							LogPrintLine_W(log, "Empty piece found in Recipe definition in %.*s line %llu: %.*s", log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex, token.value.length, token.value.chars);
 							log->hadWarnings = true;
 							break;
 						}
-						// bool TryParseEnum(MyStr_t str, enum_t* valueOut, enum_t enumCount, GetEnumStr_f* getEnumStrFunc, TryParseFailureReason_t* reasonOut = nullptr)
-						else if (!TryParseEnum(*piece, &itemIds[pIndex], ItemId_NumIds, GetItemIdStr, &parseFailureReason))
-						{
-							LogPrintLine_W(log, "Unknown Item \"%.*s\" in %.*s line %llu in Recipe: %.*s", piece->length, piece->chars, log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex, token.value.length, token.value.chars);
-							log->hadWarnings = true;
-							break;
-						}
+						// ItemDef_t* FindItemDef(ItemBook_t* book, u16 runtimeId)
 						else
 						{
-							//TryParseEnum wrote into itemIds array for us, nothing more to do
+							ItemDef_t* itemDef = FindItemDef(itemBook, piece);
+							if (itemDef != nullptr)
+							{
+								itemIds[pIndex] = itemDef->runtimeId;
+							}
+							else
+							{
+								LogPrintLine_W(log, "Unknown Item \"%.*s\" in %.*s line %llu in Recipe: %.*s", piece.length, piece.chars, log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex, token.value.length, token.value.chars);
+								log->hadWarnings = true;
+								break;
+							}
 						}
 					}
 				}
@@ -116,11 +120,11 @@ bool TryDeserRecipeBook(MyStr_t fileContents, ProcessLog_t* log, RecipeBook_t* b
 				}
 				PopMemMark(scratch);
 				
-				if (itemIds[0] != ItemId_None && itemIds[1] != ItemId_None && itemIds[2] != ItemId_None)
+				if (itemIds[0] != ITEM_ID_NONE && itemIds[1] != ITEM_ID_NONE && itemIds[2] != ITEM_ID_NONE)
 				{
 					currentRecipe = AddRecipeToBook(bookOut, NewRecipe(itemIds[0], itemIds[1], itemIds[2]));
 					NotNull(currentRecipe);
-					LogPrintLine_D(log, "Found recipe for %s", GetItemIdStr(currentRecipe->output));
+					LogPrintLine_D(log, "Found recipe for %s", GetItemDisplayNameNt(itemBook, currentRecipe->outputId));
 				}
 			}
 			// +==============================+
@@ -134,7 +138,7 @@ bool TryDeserRecipeBook(MyStr_t fileContents, ProcessLog_t* log, RecipeBook_t* b
 				if (ReadEntireFile(false, includePath, &includedFileContents, scratch2))
 				{
 					SetProcessLogFilePath(log, includePath);
-					if (TryDeserRecipeBook(includedFileContents, log, bookOut, memArena, true))
+					if (TryDeserRecipeBook(includedFileContents, log, itemBook, bookOut, memArena, true))
 					{
 						MyStr_t fileName = GetFileNamePart(oldFilePath);
 						MyStr_t includeFileName = GetFileNamePart(includePath);
@@ -185,7 +189,7 @@ bool TryDeserRecipeBook(MyStr_t fileContents, ProcessLog_t* log, RecipeBook_t* b
 	return true;
 }
 
-bool TryLoadRecipeBook(bool fromDataDir, MyStr_t filePath, ProcessLog_t* log, RecipeBook_t* bookOut, MemArena_t* memArena)
+bool TryLoadRecipeBook(bool fromDataDir, MyStr_t filePath, ProcessLog_t* log, ItemBook_t* itemBook, RecipeBook_t* bookOut, MemArena_t* memArena)
 {
 	NotNullStr(&filePath);
 	NotNull3(log, bookOut, memArena);
@@ -198,7 +202,7 @@ bool TryLoadRecipeBook(bool fromDataDir, MyStr_t filePath, ProcessLog_t* log, Re
 	MyStr_t fileContents = {};
 	if (ReadEntireFile(fromDataDir, filePath, &fileContents, scratch))
 	{
-		result = TryDeserRecipeBook(fileContents, log, bookOut, memArena);
+		result = TryDeserRecipeBook(fileContents, log, itemBook, bookOut, memArena);
 	}
 	else
 	{
@@ -211,14 +215,14 @@ bool TryLoadRecipeBook(bool fromDataDir, MyStr_t filePath, ProcessLog_t* log, Re
 	return result;
 }
 
-bool TryLoadAllRecipes(RecipeBook_t* bookOut, MemArena_t* memArena)
+bool TryLoadAllRecipes(ItemBook_t* itemBook, RecipeBook_t* bookOut, MemArena_t* memArena)
 {
 	NotNull2(bookOut, memArena);
 	MemArena_t* scratch = GetScratchArena(memArena);
 	ProcessLog_t deserLog;
 	CreateProcessLog(&deserLog, Kilobytes(64), scratch, scratch);
 	RecipeBook_t tempBook;
-	bool deserSuccess = TryLoadRecipeBook(false, NewStr(RECIPE_BOOK_PATH), &deserLog, &tempBook, scratch);
+	bool deserSuccess = TryLoadRecipeBook(false, NewStr(RECIPE_BOOK_PATH), &deserLog, itemBook, &tempBook, scratch);
 	if (deserLog.hadErrors || deserLog.hadWarnings)
 	{
 		DumpProcessLog(&deserLog, "Recipe Book Deser Log", DbgLevel_Warning);

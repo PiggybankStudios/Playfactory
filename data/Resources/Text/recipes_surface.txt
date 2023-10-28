@@ -1,10 +1,10 @@
 # Recipe Book
 
 // Level (1)
-Recipe: Mining, Mining, Sugar
-Recipe: Mining, Mining, Dough
-Recipe: Mining, Mining, Fruit
-Recipe: Mining, Mining, Mint
+Recipe: SugarTile, Mining, Sugar
+Recipe: DoughTile, Mining, Dough
+Recipe: FruitTile, Mining, Fruit
+Recipe: MintTile, Mining, Mint
 
 // Level (2)
 Recipe: Sugar, Sugar, PowderSugar

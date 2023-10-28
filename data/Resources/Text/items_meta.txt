@@ -1,0 +1,5 @@
+# Item Definitions
+
+Item: Mining
+	Flags: Meta
+	Display: Mining, Mining

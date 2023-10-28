@@ -43,7 +43,7 @@ u8 TryAddItemStackToInventory(Inventory_t* inventory, ItemStack_t stack)
 			u8 amountToAdd = (u8)MinU32(spaceLeft, countLeft);
 			targetSlot->stack.id = stack.id;
 			targetSlot->stack.count += amountToAdd;
-			PrintLine_D("Adding %u %s to slot[%llu] (%d, %d)", amountToAdd, GetItemIdStr(stack.id), targetSlot->index, targetSlot->gridPos.x, targetSlot->gridPos.y);
+			PrintLine_D("Adding %u %s to slot[%llu] (%d, %d)", amountToAdd, GetItemDisplayNameNt(&gl->itemBook, stack.id), targetSlot->index, targetSlot->gridPos.x, targetSlot->gridPos.y);
 			countLeft -= amountToAdd;
 		}
 		else { break; }
@@ -142,7 +142,7 @@ void InitInventory(Inventory_t* inventory, MemArena_t* memArena, InvType_t type)
 	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
 	{
 		InvSlot_t* slot = &inventory->slots[sIndex];
-		slot->stack.id = ItemId_None;
+		slot->stack.id = ITEM_ID_NONE;
 		slot->stack.count = 0;
 		// if (GetRandR32(&pig->random) < 0.25f)//TODO: Remove me!
 		// {
@@ -308,7 +308,7 @@ void UpdateInventory(Inventory_t* inventory, Inventory_t* otherInventory)
 									//otherInventory should be player's inventory
 									if (otherInventory != nullptr)
 									{
-										u8 numUnadded = TryAddItemStackToInventory(otherInventory, NewItemStack(recipe->output, 1));
+										u8 numUnadded = TryAddItemStackToInventory(otherInventory, NewItemStack(recipe->outputId, 1));
 										if (numUnadded == 0)
 										{
 											successfulRecipe = true;
@@ -318,7 +318,7 @@ void UpdateInventory(Inventory_t* inventory, Inventory_t* otherInventory)
 												ToVec2(inventory->mainRec.topLeft + selectedSlot->mainRec.topLeft) + ToVec2(selectedSlot->mainRec.size) / 2,
 												NewVec2(0, -1), //velocity
 												&game->entitiesSheet,
-												GetItemIdFrame(recipe->output),
+												GetItemFrame(&gl->itemBook, recipe->outputId),
 												1000 //lifespan
 											);
 											// PrintLine_D("Spawned particle (%d, %d) at (%g, %g)", newPart->frame.x, newPart->frame.y, newPart->position.x, newPart->position.y);
@@ -334,9 +334,9 @@ void UpdateInventory(Inventory_t* inventory, Inventory_t* otherInventory)
 								//TODO: Play a sound effect based on success/failure
 								
 								slot1->stack.count--;
-								if (slot1->stack.count == 0) { slot1->stack.id = ItemId_None; }
+								if (slot1->stack.count == 0) { slot1->stack.id = ITEM_ID_NONE; }
 								slot2->stack.count--;
-								if (slot2->stack.count == 0) { slot2->stack.id = ItemId_None; }
+								if (slot2->stack.count == 0) { slot2->stack.id = ITEM_ID_NONE; }
 							}
 						} break;
 						
@@ -371,8 +371,8 @@ void RenderInventorySlot(InvSlot_t* slot, reci slotRec, bool inScrollView)
 	{
 		if (slot->stack.count > 0)
 		{
-			v2i itemFrame = GetItemIdFrame(slot->stack.id);
-			if (itemFrame != NewVec2i(-1, -1))
+			v2i itemFrame = GetItemFrame(&gl->itemBook, slot->stack.id);
+			if (itemFrame != INVALID_FRAME)
 			{
 				reci itemRec = NewReci(
 					slotRec.x + slotRec.width/2 - INV_ITEM_SIZE/2,
@@ -462,9 +462,9 @@ void RenderInventoryUi(Inventory_t* inventory)
 		if (inventory->selectionIndex >= 0 && (u64)inventory->selectionIndex < inventory->numSlots)
 		{
 			InvSlot_t* selectedSlot = &inventory->slots[inventory->selectionIndex];
-			if (selectedSlot->stack.count > 0 && selectedSlot->stack.id != ItemId_None)
+			if (selectedSlot->stack.count > 0 && selectedSlot->stack.id != ITEM_ID_NONE)
 			{
-				MyStr_t itemName = NewStr(GetItemIdStr(selectedSlot->stack.id));
+				MyStr_t itemName = GetItemDisplayName(&gl->itemBook, selectedSlot->stack.id, (selectedSlot->stack.count > 1));
 				v2i itemNameSize = MeasureText(game->mainFont.font, itemName);
 				v2i itemNamePos = NewVec2i(inventory->mainRec.x - 2 - itemNameSize.width, 2);
 				PdBindFont(&game->mainFont);

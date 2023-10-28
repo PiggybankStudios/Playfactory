@@ -144,16 +144,18 @@ void InitWorld(World_t* world, MemArena_t* memArena, v2i size, u64 seed)
 			v2i tilePos = NewVec2i(tilePosX, tilePosY);
 			WorldTile_t* tile = GetWorldTileAt(world, tilePos);
 			NotNull(tile);
-			tile->type = TileType_None;
+			tile->itemId = ITEM_ID_NONE;
 			if (GetRandR32(&world->genRand) < WORLD_GEN_CANDY_DENSITY)
 			{
-				tile->type = (TileType_t)(TileType_Sugar + GetRandU32(&pig->random, 0, 4));
+				ItemDef_t* spawnItemDef = GetRandomItemWithFlag(&gl->itemBook, ItemFlags_Surface|ItemFlags_Tile, ItemFlags_Decor);
+				if (spawnItemDef != nullptr) { tile->itemId = spawnItemDef->runtimeId; }
 			}
-			else if (GetRandR32(&world->genRand) < WORLD_GEN_GRASS_DENSITY)
+			else if (GetRandR32(&world->genRand) < WORLD_GEN_DECOR_DENSITY)
 			{
-				tile->type = TileType_Grass;
+				ItemDef_t* spawnItemDef = GetRandomItemWithFlag(&gl->itemBook, ItemFlags_Surface|ItemFlags_Tile|ItemFlags_Decor);
+				if (spawnItemDef != nullptr) { tile->itemId = spawnItemDef->runtimeId; }
 			}
-			tile->isSolid = IsTileTypeSolid(tile->type);
+			tile->isSolid = IsItemSolid(&gl->itemBook, tile->itemId);
 			tile->pos = tilePos;
 		}
 	}
@@ -177,12 +179,12 @@ void RenderWorld(World_t* world, const Player_t* player)
 			v2i tilePos = NewVec2i(tilePosX, tilePosY);
 			WorldTile_t* tile = GetWorldTileAt(world, tilePos);
 			reci tileRec = NewReci(tilePosX * TILE_SIZE, tilePosY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-			v2i tileFrame = GetTileTypeFrame(tile->type, tilePos);
-			if (tileFrame != NewVec2i(-1, -1))
+			v2i tileFrame = GetItemFrame(&gl->itemBook, tile->itemId);
+			if (tileFrame != INVALID_FRAME)
 			{
 				PdDrawSheetFrame(game->entitiesSheet, tileFrame, tileRec);
 				
-				ItemStack_t dropStack = GetTileTypeDrop(tile->type);
+				ItemStack_t dropStack = GetItemDrop(&gl->itemBook, tile->itemId);
 				if (dropStack.count > 0 && player->targetTilePos == tilePos && !player->isMining)
 				{
 					PdDrawRecOutline(tileRec, RoundR32i(Oscillate(1, 3, 1000)), true);

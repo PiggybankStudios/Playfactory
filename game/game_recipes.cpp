@@ -8,12 +8,12 @@ Description:
 	** are possible in the game
 */
 
-Recipe_t NewRecipe(ItemId_t item1, ItemId_t item2, ItemId_t output)
+Recipe_t NewRecipe(u16 itemId1, u16 itemId2, u16 outputId)
 {
 	Recipe_t result = {};
-	result.item1 = item1;
-	result.item2 = item2;
-	result.output = output;
+	result.itemId1 = itemId1;
+	result.itemId2 = itemId2;
+	result.outputId = outputId;
 	return result;
 }
 
@@ -50,18 +50,18 @@ Recipe_t* AddRecipeToBook(RecipeBook_t* book, Recipe_t recipe)
 	MyMemCopy(result, &recipe, sizeof(Recipe_t));
 	result->id = book->nextId;
 	book->nextId++;
-	// PrintLine_D("Added recipe[%llu]: %s + %s = %s", result->id, GetItemIdStr(result->item1), GetItemIdStr(result->item2), GetItemIdStr(result->output));
+	// PrintLine_D("Added recipe[%llu]: %s + %s = %s", result->id, GetItemIdStr(result->itemId1), GetItemIdStr(result->itemId2), GetItemIdStr(result->output));
 	return result;
 }
 
-Recipe_t* FindRecipeInBook(RecipeBook_t* book, ItemId_t item1, ItemId_t item2, bool respectOrder = false)
+Recipe_t* FindRecipeInBook(RecipeBook_t* book, u16 itemId1, u16 itemId2, bool respectOrder = false)
 {
 	NotNull(book);
 	VarArrayLoop(&book->recipes, rIndex)
 	{
 		VarArrayLoopGet(Recipe_t, recipe, &book->recipes, rIndex);
-		if (recipe->item1 == item1 && recipe->item2 == item2) { return recipe; }
-		else if (!respectOrder && recipe->item1 == item2 && recipe->item2 == item1) { return recipe; }
+		if (recipe->itemId1 == itemId1 && recipe->itemId2 == itemId2) { return recipe; }
+		else if (!respectOrder && recipe->itemId1 == itemId2 && recipe->itemId2 == itemId1) { return recipe; }
 	}
 	return nullptr;
 }

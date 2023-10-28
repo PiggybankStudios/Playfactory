@@ -1,0 +1,16 @@
+# Item Definitions
+
+Item: Grass1
+	Flags: Surface, Tile, Decor
+	Display: Grass1, Grass1
+	Frame: (3, 0)
+
+Item: Grass2
+	Flags: Surface, Tile, Decor
+	Display: Grass2, Grass2
+	Frame: (3, 1)
+
+Item: Grass3
+	Flags: Surface, Tile, Decor
+	Display: Grass3, Grass3
+	Frame: (3, 2)

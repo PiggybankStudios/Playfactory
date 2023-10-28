@@ -20,7 +20,7 @@ InvSlot_t* _TwoPassAddInvSlot(InvSlot_t* slots, u64 numSlots, u64* slotIndex, In
 		result->type = type;
 		result->groupId = groupId;
 		result->gridPos = gridPos;
-		result->stack = NewItemStack(ItemId_None, 0);
+		result->stack = NewItemStack(ITEM_ID_NONE, 0);
 		result->mainRec.topLeft = position;
 		result->mainRec.size = Vec2iFill(INV_SLOT_SIZE);
 		if (type == InvSlotType_Button)

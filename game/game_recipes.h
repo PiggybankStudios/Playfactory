@@ -10,9 +10,9 @@ Date:   10\25\2023
 struct Recipe_t
 {
 	u64 id;
-	ItemId_t item1;
-	ItemId_t item2;
-	ItemId_t output;
+	u16 itemId1;
+	u16 itemId2;
+	u16 outputId;
 };
 
 struct RecipeBook_t

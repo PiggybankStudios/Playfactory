@@ -7,17 +7,10 @@ Date:   09\08\2023
 #ifndef _GAME_H
 #define _GAME_H
 
-#define MAIN_FONT_PATH         "/System/Fonts/Asheville-Sans-14-Bold.pft"
-#define BUTTON_FONT_PATH       "Resources/Fonts/pixel8"
-#define ITEM_COUNT_FONT_PATH   "Resources/Fonts/blocky"
-#define DEFAULT_WORLD_SIZE     NewVec2i(100, 100)
-#define DEFAULT_WORLD_SEED     1
-#define GAME_MAX_NUM_PARTICLES 300
-
+#include "game_defines.h"
 #include "game_particles.h"
-#include "game_item_ids.h"
+#include "game_item_defs.h"
 #include "game_recipes.h"
-#include "game_tile_types.h"
 #include "game_inv_types.h"
 #include "game_inventory.h"
 #include "game_view.h"

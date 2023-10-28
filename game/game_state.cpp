@@ -8,6 +8,8 @@ Description:
 
 GameState_t* game = nullptr;
 
+#include "game_item_defs.cpp"
+#include "game_item_defs_serialization.cpp"
 #include "game_recipes.cpp"
 #include "game_recipes_serialization.cpp"
 #include "game_particles.cpp"
