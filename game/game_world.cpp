@@ -143,6 +143,7 @@ void InitWorld(World_t* world, MemArena_t* memArena, v2i size, u64 seed)
 	ClearPointer(world);
 	world->allocArena = memArena;
 	world->size = size;
+	world->pixelSize = Vec2iMultiply(size, Vec2iFill(TILE_SIZE));
 	world->seed = seed;
 	CreateRandomSeries(&world->genRand);
 	SeedRandomSeriesU64(&world->genRand, world->seed);
@@ -207,10 +208,40 @@ void RenderWorld(World_t* world, const Player_t* player)
 			{
 				PdDrawSheetFrame(game->entitiesSheet, tileFrame, tileRec);
 				
-				ItemStack_t dropStack = GetItemDrop(&gl->itemBook, tile->itemId);
-				if (dropStack.count > 0 && player->targetTilePos == tilePos && !player->isMining)
+				bool isInventoryOpen = (game->openInventory != nullptr || game->openScrollInventory != nullptr);
+				if (player->targetTilePos == tilePos && !player->isMining && !isInventoryOpen)
 				{
-					PdDrawRecOutline(tileRec, RoundR32i(Oscillate(1, 3, 1000)), true);
+					ItemStack_t dropStack = GetItemDrop(&gl->itemBook, tile->itemId);
+					InvType_t invType = GetItemInvType(&gl->itemBook, tile->itemId);
+					
+					if (dropStack.count > 0)
+					{
+						PdDrawRecOutline(tileRec, RoundR32i(Oscillate(1, 3, 1000)), true);
+					}
+					else if (invType != InvType_None)
+					{
+						if (invType == InvType_Store)
+						{
+							v2i storeOrigin = tilePos;
+							
+							WorldTile_t* upLeftTile = GetWorldTileAt(world, tilePos + NewVec2i(-1, -1));
+							WorldTile_t* leftTile = GetWorldTileAt(world, tilePos + NewVec2i(-1, 0));
+							WorldTile_t* upTile = GetWorldTileAt(world, tilePos + NewVec2i(0, -1));
+							if (upLeftTile != nullptr && GetItemInvType(&gl->itemBook, upLeftTile->itemId) == invType) { storeOrigin += NewVec2i(-1, -1); }
+							else if (leftTile != nullptr && GetItemInvType(&gl->itemBook, leftTile->itemId) == invType) { storeOrigin += NewVec2i(-1, 0); }
+							else if (upTile != nullptr && GetItemInvType(&gl->itemBook, upTile->itemId) == invType) { storeOrigin += NewVec2i(0, -1); }
+							
+							reci storeRec = NewReci(
+								Vec2iMultiply(storeOrigin, Vec2iFill(TILE_SIZE)),
+								TILE_SIZE*2, TILE_SIZE*2
+							);
+							PdDrawRecOutline(storeRec, RoundR32i(Oscillate(1, 3, 1000)), true);
+						}
+						else
+						{
+							PdDrawRecOutline(tileRec, RoundR32i(Oscillate(1, 3, 1000)), true);
+						}
+					}
 				}
 			}
 		}

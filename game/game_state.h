@@ -9,9 +9,9 @@ Date:   09\08\2023
 
 #include "game_defines.h"
 #include "game_particles.h"
+#include "game_inv_types.h"
 #include "game_item_defs.h"
 #include "game_recipes.h"
-#include "game_inv_types.h"
 #include "game_inventory.h"
 #include "game_view.h"
 #include "game_world.h"
@@ -35,6 +35,7 @@ struct GameState_t
 	Player_t player;
 	World_t world;
 	ParticleSystem_t parts;
+	Inventory_t storeInventory;
 	
 	Inventory_t* openInventory;
 	Inventory_t* openScrollInventory;

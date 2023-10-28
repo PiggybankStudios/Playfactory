@@ -108,6 +108,17 @@ InvSlot_t* GetInvSlotsForInvType(InvType_t type, MemArena_t* memArena, u64* numS
 				TwoPassAddSlotLoopEnd();
 			}
 		} break;
+		case InvType_Store:
+		{
+			TwoPassAddSlotLoopStart()
+			{
+				slotIndex = 0;
+				InvSlot_t* sellSlot = AddInvSlotSimple(0, NewVec2i(0, 0));
+				if (sellSlot != nullptr) { sellSlot->type = InvSlotType_Sell; }
+				
+				TwoPassAddSlotLoopEnd();
+			}
+		} break;
 		default: DebugAssert(false); SetOptionalOutPntr(numSlotsOut, 0); return nullptr;
 	}
 	

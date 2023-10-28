@@ -61,6 +61,7 @@ struct ItemDef_t
 	v2i frame;
 	ItemStack_t dropStack;
 	u8 value;
+	InvType_t inventoryType;
 };
 
 struct ItemBook_t

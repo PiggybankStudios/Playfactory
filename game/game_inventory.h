@@ -25,6 +25,7 @@ enum InvSlotType_t
 	InvSlotType_Default = 0,
 	InvSlotType_Button,
 	InvSlotType_ToolBtn,
+	InvSlotType_Sell,
 	InvSlotType_NumTypes,
 };
 const char* GetInvSlotTypeStr(InvSlotType_t enumValue)
@@ -34,6 +35,7 @@ const char* GetInvSlotTypeStr(InvSlotType_t enumValue)
 		case InvSlotType_Default: return "Default";
 		case InvSlotType_Button:  return "Button";
 		case InvSlotType_ToolBtn: return "ToolBtn";
+		case InvSlotType_Sell:    return "Sell";
 		default: return "Unknown";
 	}
 }

@@ -16,6 +16,7 @@ enum InvType_t
 	InvType_PlayerInventory,
 	InvType_PlayerScience,
 	InvType_SmallBox,
+	InvType_Store,
 	InvType_NumTypes,
 };
 const char* GetInvTypeStr(InvType_t enumValue)
@@ -26,6 +27,7 @@ const char* GetInvTypeStr(InvType_t enumValue)
 		case InvType_PlayerInventory: return "PlayerInventory";
 		case InvType_PlayerScience:   return "PlayerScience";
 		case InvType_SmallBox:        return "SmallBox";
+		case InvType_Store:           return "Store";
 		default: return "Unknown";
 	}
 }

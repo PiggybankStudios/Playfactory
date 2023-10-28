@@ -108,6 +108,9 @@ void UpdatePlayer(Player_t* player, World_t* world)
 	ItemStack_t targetDrop = {};
 	if (player->targetTile != nullptr) { targetDrop = GetItemDrop(&gl->itemBook, player->targetTile->itemId); }
 	
+	InvType_t targetInvType = InvType_None;
+	if (player->targetTile != nullptr) { targetInvType = GetItemInvType(&gl->itemBook, player->targetTile->itemId); }
+	
 	if (targetDrop.count > 0 && targetDrop.id != ITEM_ID_NONE && !isInventoryOpen)
 	{
 		// +==============================+
@@ -169,6 +172,25 @@ void UpdatePlayer(Player_t* player, World_t* world)
 			{
 				HandleBtnExtended(Btn_B);
 				player->isMining = false;
+			}
+		}
+	}
+	else if (targetInvType != InvType_None && !isInventoryOpen && !player->isMining)
+	{
+		// +==============================+
+		// |    Btn_A Opens Inventory     |
+		// +==============================+
+		if (BtnPressed(Btn_A))
+		{
+			HandleBtnExtended(Btn_A);
+			if (targetInvType == InvType_Store)
+			{
+				game->openInventory = &game->storeInventory; OnOpenInventory(game->openInventory, false);
+				game->openScrollInventory = &game->player.inventory; OnOpenInventory(game->openScrollInventory, true);
+			}
+			else
+			{
+				//TODO: Implement me!
 			}
 		}
 	}

@@ -8,12 +8,12 @@ Description:
 
 GameState_t* game = nullptr;
 
+#include "game_inv_types.cpp"
 #include "game_item_defs.cpp"
 #include "game_item_defs_serialization.cpp"
 #include "game_recipes.cpp"
 #include "game_recipes_serialization.cpp"
 #include "game_particles.cpp"
-#include "game_inv_types.cpp"
 #include "game_inventory.cpp"
 #include "game_view.cpp"
 #include "game_world.cpp"
@@ -52,6 +52,7 @@ void StartAppState_Game(bool initialize, AppState_t prevState, MyStr_t transitio
 		InitWorld(&game->world, mainHeap, DEFAULT_WORLD_SIZE, DEFAULT_WORLD_SEED);
 		InitPlayer(&game->player, mainHeap, ToVec2(game->world.pixelSize) / 2.0f);
 		InitGameView(&game->view, game->player.position, game->world.size * TILE_SIZE);
+		InitInventory(&game->storeInventory, mainHeap, InvType_Store);
 		
 		game->initialized = true;
 	}
@@ -67,6 +68,7 @@ void StopAppState_Game(bool deinitialize, AppState_t nextState)
 		FreePlayer(&game->player);
 		FreeWorld(&game->world);
 		FreeParticleSystem(&game->parts);
+		FreeInventory(&game->storeInventory);
 		ClearPointer(game);
 	}
 }
@@ -136,7 +138,6 @@ void RenderAppState_Game(bool isOnTop)
 	{
 		PdSetRenderOffset(-game->view.worldReci.topLeft);
 		
-		// void RenderParticleSystem(ParticleSystem_t* system, u8 layers = PartLayer_All, bool renderNormalParts = true, bool renderUiParts = false)
 		RenderParticleSystem(&game->parts, PartLayer_Low);
 		RenderWorld(&game->world, &game->player);
 		RenderPlayer(&game->player);

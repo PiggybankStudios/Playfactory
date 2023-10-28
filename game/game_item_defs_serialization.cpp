@@ -213,6 +213,17 @@ bool TryDeserItemBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* bookO
 				}
 			}
 			// +==============================+
+			// |          Inventory           |
+			// +==============================+
+			else if (StrEqualsIgnoreCase(token.key, "Inventory"))
+			{
+				if (!TryParseEnum(token.value, &currentItem.inventoryType, InvType_NumTypes, GetInvTypeStr, &parseFailureReason))
+				{
+					LogPrintLine_W(log, "Unknown Inventory type \"%.*s\" in %.*s line %llu", token.value.length, token.value.chars, log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+					log->hadWarnings = true;
+				}
+			}
+			// +==============================+
 			// |           Include            |
 			// +==============================+
 			else if (StrEqualsIgnoreCase(token.key, "Include"))

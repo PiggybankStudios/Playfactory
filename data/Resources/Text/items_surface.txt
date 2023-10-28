@@ -27,7 +27,7 @@ Item: Mint
 // |            Tiles             |
 // +==============================+
 Item: SugarTile
-	Flags: Surface, Tile
+	Flags: Surface, Tile, Solid
 	Display: Sugar Tile, Sugar Tiles
 	Frame: (0, 3)
 	Drop: Sugar, 2
