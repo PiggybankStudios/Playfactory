@@ -65,7 +65,7 @@ void StartAppState_MainMenu(bool initialize, AppState_t prevState, MyStr_t trans
 		mmenu->handSheet = LoadSpriteSheet(NewStr("Resources/Sheets/hand"), 1);
 		Assert(mmenu->handSheet.isValid);
 		
-		mmenu->buttonFont = LoadFont(NewStr("Resources/Fonts/blocky"));
+		mmenu->buttonFont = LoadFont(NewStr(MMENU_BTN_FONT_PATH));
 		Assert(mmenu->buttonFont.isValid);
 		
 		mmenu->titleRec.size = MeasureText(gl->titleFont.font, NewStr(PROJECT_NAME));

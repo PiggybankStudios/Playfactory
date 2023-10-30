@@ -156,6 +156,13 @@ ItemDef_t* GetRandomItemWithFlag(ItemBook_t* book, u8 flag, u8 notFlag = ItemFla
 	AssertMsg(false, "Unreachable!");
 	return nullptr;
 }
+u8 GetItemValue(ItemBook_t* book, u16 runtimeId)
+{
+	NotNull(book);
+	ItemDef_t* itemDef = FindItemDef(book, runtimeId);
+	if (itemDef != nullptr) { return itemDef->value; }
+	else { return 0; }
+}
 InvType_t GetItemInvType(ItemBook_t* book, u16 runtimeId)
 {
 	NotNull(book);

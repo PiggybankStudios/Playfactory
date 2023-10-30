@@ -25,6 +25,7 @@ void InitPlayer(Player_t* player, MemArena_t* memArena, v2 startPos)
 	player->position = startPos;
 	player->velocity = Vec2_Zero;
 	player->rotation = Dir2Ex_Down;
+	player->beanCount = 0;
 	InitInventory(&player->inventory, player->allocArena, InvType_PlayerInventory);
 	InitInventory(&player->scienceInventory, player->allocArena, InvType_PlayerScience);
 }
@@ -178,7 +179,7 @@ void UpdatePlayer(Player_t* player, World_t* world)
 	else if (targetInvType != InvType_None && !isInventoryOpen && !player->isMining)
 	{
 		// +==============================+
-		// |    Btn_A Opens Inventory     |
+		// |  Btn_A Opens Tile Inventory  |
 		// +==============================+
 		if (BtnPressed(Btn_A))
 		{

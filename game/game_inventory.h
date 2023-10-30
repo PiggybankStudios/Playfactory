@@ -26,6 +26,7 @@ enum InvSlotType_t
 	InvSlotType_Button,
 	InvSlotType_ToolBtn,
 	InvSlotType_Sell,
+	InvSlotType_Decor,
 	InvSlotType_NumTypes,
 };
 const char* GetInvSlotTypeStr(InvSlotType_t enumValue)
@@ -36,6 +37,7 @@ const char* GetInvSlotTypeStr(InvSlotType_t enumValue)
 		case InvSlotType_Button:  return "Button";
 		case InvSlotType_ToolBtn: return "ToolBtn";
 		case InvSlotType_Sell:    return "Sell";
+		case InvSlotType_Decor:   return "Decor";
 		default: return "Unknown";
 	}
 }
@@ -69,11 +71,12 @@ struct InvSlot_t
 	u64 index;
 	u64 groupId;
 	InvSlotType_t type;
-	v2i gridPos;
+	reci gridRec;
 	ItemStack_t stack;
 	InvButton_t button;
 	bool isSelected;
 	r32 selectedAnimProgress;
+	Texture_t* texturePntr;
 	reci mainRec; //only size is used when in scrollView mode
 };
 
@@ -88,6 +91,7 @@ struct Inventory_t
 	bool inScrollView;
 	
 	i64 selectionIndex;
+	v2i selectionGridPos;
 	
 	r32 scroll;
 	r32 scrollMin;

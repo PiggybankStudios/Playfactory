@@ -24,12 +24,16 @@ struct GameState_t
 	Font_t mainFont;
 	Font_t buttonFont;
 	Font_t itemCountFont;
+	Font_t beanCountFont;
 	Texture_t pigTexture;
 	Sound_t testSound;
 	SpriteSheet_t kennySheet;
 	SpriteSheet_t playerSheet;
 	SpriteSheet_t playerMiningSheet;
 	SpriteSheet_t entitiesSheet;
+	Texture_t beanTexture;
+	Texture_t beanMarketSignTexture;
+	Texture_t scienceIconTexture;
 	
 	GameView_t view;
 	Player_t player;
@@ -39,6 +43,10 @@ struct GameState_t
 	
 	Inventory_t* openInventory;
 	Inventory_t* openScrollInventory;
+	
+	reci topBarRec;
+	reci beanRec;
+	v2i beanCountTextPos;
 };
 
 #endif //  _GAME_H

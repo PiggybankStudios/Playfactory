@@ -32,9 +32,17 @@ void StartAppState_Game(bool initialize, AppState_t prevState, MyStr_t transitio
 		Assert(game->buttonFont.isValid);
 		game->itemCountFont = LoadFont(NewStr(ITEM_COUNT_FONT_PATH));
 		Assert(game->itemCountFont.isValid);
+		game->beanCountFont = LoadFont(NewStr(BEAN_COUNT_FONT_PATH));
+		Assert(game->beanCountFont.isValid);
 		
 		game->pigTexture = LoadTexture(NewStr("Resources/Sprites/pig64"));
 		Assert(game->pigTexture.isValid);
+		game->beanTexture = LoadTexture(NewStr("Resources/Sprites/bean"));
+		Assert(game->beanTexture.isValid);
+		game->beanMarketSignTexture = LoadTexture(NewStr("Resources/Sprites/bean_market_sign"));
+		Assert(game->beanMarketSignTexture.isValid);
+		game->scienceIconTexture = LoadTexture(NewStr("Resources/Sprites/science_icon"));
+		Assert(game->scienceIconTexture.isValid);
 		
 		game->testSound = LoadSound(NewStr("Resources/Sounds/test"));
 		Assert(game->testSound.isValid);
@@ -71,6 +79,23 @@ void StopAppState_Game(bool deinitialize, AppState_t nextState)
 		FreeInventory(&game->storeInventory);
 		ClearPointer(game);
 	}
+}
+
+// +--------------------------------------------------------------+
+// |                            Layout                            |
+// +--------------------------------------------------------------+
+void GameUiLayout()
+{
+	game->topBarRec.topLeft = Vec2i_Zero;
+	game->topBarRec.height = game->beanCountFont.lineHeight + 2;
+	game->topBarRec.width = ScreenSize.width;
+	
+	game->beanRec.size = game->beanTexture.size;
+	game->beanRec.x = 2;
+	game->beanRec.y = game->topBarRec.y + game->topBarRec.height/2 - game->beanRec.height/2;
+	
+	game->beanCountTextPos.x = game->beanRec.x + game->beanRec.width + 2;
+	game->beanCountTextPos.y = game->topBarRec.y + game->topBarRec.height/2 - game->beanCountFont.lineHeight/2;
 }
 
 // +--------------------------------------------------------------+
@@ -111,12 +136,11 @@ void UpdateAppState_Game()
 	UpdateWorld(&game->world);
 	
 	// +==============================+
-	// |            Btn_A             |
+	// |   Debug Crank Gives Beans    |
 	// +==============================+
-	if (BtnPressed(Btn_A))
+	if (pig->debugEnabled && CrankMovedRaw() && game->openInventory == nullptr && game->openScrollInventory == nullptr && !game->player.isMining)
 	{
-		HandleBtnExtended(Btn_A);
-		//TODO: Implement me!
+		game->player.beanCount += RoundR32i(input->crankDelta * 1);
 	}
 	
 	FreeScratchArena(scratch);
@@ -128,6 +152,7 @@ void UpdateAppState_Game()
 void RenderAppState_Game(bool isOnTop)
 {
 	MemArena_t* scratch = GetScratchArena();
+	GameUiLayout();
 	
 	pd->graphics->clear(kColorWhite);
 	PdSetDrawMode(kDrawModeCopy);
@@ -149,6 +174,14 @@ void RenderAppState_Game(bool isOnTop)
 	RenderParticleSystem(&game->parts, PartLayer_LowUi);
 	
 	// +==============================+
+	// |        Render Topbar         |
+	// +==============================+
+	// PdDrawRec(game->topBarRec, kColorBlack);
+	PdDrawTexturedRec(game->beanTexture, game->beanRec);
+	PdBindFont(&game->beanCountFont);
+	PdDrawTextPrint(game->beanCountTextPos, "%s", FormatNumberWithCommasNt(game->player.beanCount));
+	
+	// +==============================+
 	// | Render Crank Hint for Mining |
 	// +==============================+
 	if (game->player.isMining)
@@ -161,8 +194,8 @@ void RenderAppState_Game(bool isOnTop)
 	// +==============================+
 	// |      Render Inventories      |
 	// +==============================+
-	if (game->openInventory != nullptr) { RenderInventoryUi(game->openInventory); }
-	if (game->openScrollInventory != nullptr) { RenderInventoryUi(game->openScrollInventory); }
+	if (game->openInventory != nullptr) { RenderInventoryUi(game->openInventory, game->openScrollInventory); }
+	if (game->openScrollInventory != nullptr) { RenderInventoryUi(game->openScrollInventory, game->openInventory); }
 	
 	RenderParticleSystem(&game->parts, PartLayer_HighUi);
 	

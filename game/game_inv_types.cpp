@@ -8,7 +8,7 @@ Description:
 	** Each type of inventory gets to decide how these slots are arranged and grouped.
 */
 
-InvSlot_t* _TwoPassAddInvSlot(InvSlot_t* slots, u64 numSlots, u64* slotIndex, InvSlotType_t type, u64 groupId, v2i gridPos, v2i position)
+InvSlot_t* _TwoPassAddInvSlot(InvSlot_t* slots, u64 numSlots, u64* slotIndex, InvSlotType_t type, u64 groupId, reci gridRec, v2i position, Texture_t* texturePntr)
 {
 	InvSlot_t* result = nullptr;
 	if (slots != nullptr)
@@ -19,10 +19,11 @@ InvSlot_t* _TwoPassAddInvSlot(InvSlot_t* slots, u64 numSlots, u64* slotIndex, In
 		result->index = *slotIndex;
 		result->type = type;
 		result->groupId = groupId;
-		result->gridPos = gridPos;
+		result->gridRec = gridRec;
 		result->stack = NewItemStack(ITEM_ID_NONE, 0);
+		result->texturePntr = texturePntr;
 		result->mainRec.topLeft = position;
-		result->mainRec.size = Vec2iFill(INV_SLOT_SIZE);
+		result->mainRec.size = (texturePntr != nullptr) ? texturePntr->size : Vec2iFill(INV_SLOT_SIZE);
 		if (type == InvSlotType_Button)
 		{
 			result->mainRec.height = game->mainFont.lineHeight + 2*2;
@@ -38,8 +39,9 @@ InvSlot_t* _TwoPassAddInvSlot(InvSlot_t* slots, u64 numSlots, u64* slotIndex, In
 
 InvSlot_t* GetInvSlotsForInvType(InvType_t type, MemArena_t* memArena, u64* numSlotsOut)
 {
-	#define AddInvSlot(type, groupId, gridPos, position) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, (type), (groupId), (gridPos), (position))
-	#define AddInvSlotSimple(groupId, gridPos) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, InvSlotType_Default, (groupId), (gridPos), Vec2iMultiply((gridPos), Vec2iFill(INV_SLOT_SIZE + INV_SLOT_MARGIN)))
+	#define AddInvSlot(type, groupId, gridRec, position) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, (type), (groupId), (gridRec), (position), nullptr)
+	#define AddInvSlotSimple(groupId, gridPos) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, InvSlotType_Default, (groupId), NewReci((gridPos), 1, 1), Vec2iMultiply((gridPos), Vec2iFill(INV_SLOT_SIZE + INV_SLOT_MARGIN)), nullptr)
+	#define AddInvSlotDecor(groupId, position, texturePntr) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, InvSlotType_Decor, (groupId), Reci_Zero, (position), (texturePntr))
 	
 	#define TwoPassAddSlotLoopStart() for (pass = 0; pass < 2; pass++)
 	#define TwoPassAddSlotLoopEnd() do                                    \
@@ -82,15 +84,21 @@ InvSlot_t* GetInvSlotsForInvType(InvType_t type, MemArena_t* memArena, u64* numS
 			TwoPassAddSlotLoopStart()
 			{
 				slotIndex = 0;
-				AddInvSlotSimple(0, NewVec2i(0, 0));
-				AddInvSlotSimple(0, NewVec2i(1, 0));
-				i32 slotSize = (INV_SLOT_SIZE + INV_SLOT_MARGIN);
-				InvSlot_t* buttonSlot = AddInvSlot(InvSlotType_Button, 1, NewVec2i(1, 1), NewVec2i(1 * slotSize - 15, 1 * slotSize));
+				
+				v2i iconSize = game->scienceIconTexture.size;
+				i32 rightSlotX = INV_SLOT_SIZE + 2*INV_SLOT_MARGIN + iconSize.width;
+				
+				AddInvSlot(InvSlotType_Default, 0, NewReci(0, 0, 1, 1), NewVec2i(0, iconSize.height/2 - INV_SLOT_SIZE/2 - 10));
+				AddInvSlot(InvSlotType_Default, 0, NewReci(1, 0, 1, 1), NewVec2i(rightSlotX, iconSize.height/2 - INV_SLOT_SIZE/2 - 10));
+				InvSlot_t* buttonSlot = AddInvSlot(InvSlotType_Button, 1, NewReci(0, 1, 2, 1), NewVec2i(INV_SLOT_SIZE + INV_SLOT_MARGIN + iconSize.width/2 - INV_SLOT_SIZE/2 - 8, iconSize.height + INV_SLOT_MARGIN));
 				if (buttonSlot != nullptr)
 				{
 					buttonSlot->button = InvButton_Combine;
 					buttonSlot->mainRec.width += 15;
 				}
+				
+				AddInvSlotDecor(0, NewVec2i(INV_SLOT_SIZE + INV_SLOT_MARGIN, 0), &game->scienceIconTexture);
+				
 				TwoPassAddSlotLoopEnd();
 			}
 		} break;
@@ -113,8 +121,15 @@ InvSlot_t* GetInvSlotsForInvType(InvType_t type, MemArena_t* memArena, u64* numS
 			TwoPassAddSlotLoopStart()
 			{
 				slotIndex = 0;
-				InvSlot_t* sellSlot = AddInvSlotSimple(0, NewVec2i(0, 0));
-				if (sellSlot != nullptr) { sellSlot->type = InvSlotType_Sell; }
+				const u64 groupCounter = 0; //Bean Counter
+				const u64 groupMarket = 1; //Bean Market
+				const u64 groupTech = 2; //Bean Tech
+				const u64 groupBank = 3; //Bean Bank
+				
+				v2i signSize = game->beanMarketSignTexture.size;
+				
+				AddInvSlot(InvSlotType_Sell, groupCounter, NewReci(0, 0, 1, 1000), NewVec2i(signSize.width/2 - INV_SLOT_SIZE/2, 5 + signSize.height));
+				AddInvSlotDecor(groupCounter, NewVec2i(0, 0), &game->beanMarketSignTexture);
 				
 				TwoPassAddSlotLoopEnd();
 			}

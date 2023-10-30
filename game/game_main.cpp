@@ -70,7 +70,7 @@ AppState_t InitGame()
 	}
 	
 	
-	gl->titleFont = LoadFont(NewStr("Resources/Fonts/SpaceContract"));
+	gl->titleFont = LoadFont(NewStr(TITLE_FONT_PATH));
 	Assert(gl->titleFont.isValid);
 	
 	return FIRST_APP_STATE;
