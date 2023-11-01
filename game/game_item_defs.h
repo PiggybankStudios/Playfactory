@@ -17,7 +17,7 @@ enum ItemFlags_t
 	ItemFlags_Surface     = 0x10,
 	ItemFlags_Sky         = 0x20,
 	ItemFlags_Decor       = 0x40,
-	ItemFlags_StoreBought = 0x80,
+	ItemFlags_InStore     = 0x80,
 	ItemFlags_NumFlags = 0x80,
 };
 const char* GetItemFlagsStr(ItemFlags_t enumValue)
@@ -32,7 +32,7 @@ const char* GetItemFlagsStr(ItemFlags_t enumValue)
 		case ItemFlags_Surface:      return "Surface";
 		case ItemFlags_Sky:          return "Sky";
 		case ItemFlags_Decor:        return "Decor";
-		case ItemFlags_StoreBought:  return "StoreBought";
+		case ItemFlags_InStore:      return "InStore";
 		default: return "Unknown";
 	}
 }

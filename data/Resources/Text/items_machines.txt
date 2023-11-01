@@ -22,7 +22,18 @@ Item: StoreBR
 	Inventory: Store
 
 Item: Drill
-	Flags: Tile, Solid, StoreBought
+	Flags: Tile, Solid, InStore
 	Display: Drill, Drills
-	Frame: (0, 2)
+	Frame: (1, 2)
 	Cost: 15
+Item: Pipe
+	Flags: Tile, Solid, InStore
+	Display: Pipe, Pipes
+	Frame: (7, 2)
+	Cost: 5
+
+// Item: Bag //TODO: Remove me!
+// 	Flags: InStore
+// 	Display: Bag, Bags
+// 	Frame: (0, 0)
+// 	Cost: 100

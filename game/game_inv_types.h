@@ -9,6 +9,8 @@ Date:   09\11\2023
 
 #define PLAYER_INV_SIZE    NewVec2i(4, 3)
 #define SMALL_BOX_INV_SIZE NewVec2i(2, 2)
+#define MAX_NUM_INV_GROUPS 4 //groups
+#define MARKET_NUM_COLUMNS 3 //columns
 
 enum InvType_t
 {

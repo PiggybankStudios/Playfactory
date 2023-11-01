@@ -52,22 +52,22 @@ u8 TryAddItemStackToInventory(Inventory_t* inventory, ItemStack_t stack)
 	return countLeft;
 }
 
-InvSlot_t* GetInvSlotAtGridPos(Inventory_t* inventory, v2i gridPos)
+InvSlot_t* GetInvSlotAtGridPos(Inventory_t* inventory, u64 group, v2i gridPos)
 {
 	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
 	{
 		InvSlot_t* slot = &inventory->slots[sIndex];
-		if (IsInsideReci(slot->gridRec, gridPos) && slot->type != InvSlotType_Decor) { return slot; }
+		if (slot->group == group && IsInsideReci(slot->gridRec, gridPos) && slot->type != InvSlotType_Decor) { return slot; }
 	}
 	return nullptr;
 }
-InvSlot_t* GetInvSlotMaxOrMinInRow(Inventory_t* inventory, i32 row, bool findMax)
+InvSlot_t* GetInvSlotMaxOrMinInRow(Inventory_t* inventory, u64 group, i32 row, bool findMax)
 {
 	InvSlot_t* result = nullptr;
 	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
 	{
 		InvSlot_t* slot = &inventory->slots[sIndex];
-		if (row >= slot->gridRec.y && row < slot->gridRec.y + slot->gridRec.height)
+		if (slot->group == group && slot->type != InvSlotType_GroupChange && row >= slot->gridRec.y && row < slot->gridRec.y + slot->gridRec.height)
 		{
 			if (result == nullptr) { result = slot; }
 			else if (slot->gridRec.x + slot->gridRec.width > result->gridRec.x + result->gridRec.width && findMax) { result = slot; }
@@ -76,17 +76,34 @@ InvSlot_t* GetInvSlotMaxOrMinInRow(Inventory_t* inventory, i32 row, bool findMax
 	}
 	return result;
 }
-InvSlot_t* GetInvSlotMaxOrMinInCol(Inventory_t* inventory, i32 column, bool findMax)
+InvSlot_t* GetInvSlotMaxOrMinInCol(Inventory_t* inventory, u64 group, i32 column, bool findMax)
 {
 	InvSlot_t* result = nullptr;
 	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
 	{
 		InvSlot_t* slot = &inventory->slots[sIndex];
-		if (column >= slot->gridRec.x && column < slot->gridRec.x + slot->gridRec.width)
+		if (slot->group == group && slot->type != InvSlotType_GroupChange && column >= slot->gridRec.x && column < slot->gridRec.x + slot->gridRec.width)
 		{
 			if (result == nullptr) { result = slot; }
 			else if (slot->gridRec.y + slot->gridRec.height > result->gridRec.y + result->gridRec.height && findMax) { result = slot; }
 			else if (slot->gridRec.y < result->gridRec.y && !findMax) { result = slot; }
+		}
+	}
+	return result;
+}
+InvSlot_t* FindDefaultSlotInInventory(Inventory_t* inventory, u64 group = MAX_NUM_INV_GROUPS)
+{
+	// We want to find the slot that is not Decor or GroupChange, is in the first most group, and then is the top-left-most slot (prioritized in that order)
+	InvSlot_t* result = nullptr;
+	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
+	{
+		InvSlot_t* slot = &inventory->slots[sIndex];
+		if (slot->type != InvSlotType_Decor && slot->type != InvSlotType_GroupChange &&
+			(group == MAX_NUM_INV_GROUPS || slot->group == group))
+		{
+			if (result == nullptr) { result = slot; }
+			else if (slot->group < result->group) { result = slot; }
+			else if (slot->group == result->group && slot->gridRec.x + slot->gridRec.y < result->gridRec.x + result->gridRec.y) { result = slot; }
 		}
 	}
 	return result;
@@ -100,20 +117,32 @@ InvSlot_t* InvMoveSelection(Inventory_t* inventory, Dir2_t direction)
 	
 	if (selectedSlot == nullptr)
 	{
-		for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
-		{
-			if (inventory->slots[sIndex].type != InvSlotType_Decor) { selectedSlot = &inventory->slots[sIndex]; break; }
-		}
+		newSelectedSlot = FindDefaultSlotInInventory(inventory);
 	}
 	else
 	{
-		newSelectedSlot = GetInvSlotAtGridPos(inventory, inventory->selectionGridPos + ToVec2i(direction));
+		newSelectedSlot = GetInvSlotAtGridPos(inventory, selectedSlot->group, inventory->selectionGridPos + ToVec2i(direction));
 		if (newSelectedSlot == nullptr)
 		{
-			if (direction == Dir2_Left)       { newSelectedSlot = GetInvSlotMaxOrMinInRow(inventory, inventory->selectionGridPos.y, true);  }
-			else if (direction == Dir2_Right) { newSelectedSlot = GetInvSlotMaxOrMinInRow(inventory, inventory->selectionGridPos.y, false); }
-			else if (direction == Dir2_Up)    { newSelectedSlot = GetInvSlotMaxOrMinInCol(inventory, inventory->selectionGridPos.x, true);  }
-			else if (direction == Dir2_Down)  { newSelectedSlot = GetInvSlotMaxOrMinInCol(inventory, inventory->selectionGridPos.x, false); }
+			if (direction == Dir2_Left)       { newSelectedSlot = GetInvSlotMaxOrMinInRow(inventory, selectedSlot->group, inventory->selectionGridPos.y, true);  }
+			else if (direction == Dir2_Right) { newSelectedSlot = GetInvSlotMaxOrMinInRow(inventory, selectedSlot->group, inventory->selectionGridPos.y, false); }
+			else if (direction == Dir2_Up)    { newSelectedSlot = GetInvSlotMaxOrMinInCol(inventory, selectedSlot->group, inventory->selectionGridPos.x, true);  }
+			else if (direction == Dir2_Down)  { newSelectedSlot = GetInvSlotMaxOrMinInCol(inventory, selectedSlot->group, inventory->selectionGridPos.x, false); }
+		}
+	}
+	
+	if (newSelectedSlot != nullptr && newSelectedSlot->type == InvSlotType_GroupChange)
+	{
+		inventory->groups[selectedSlot->group].prevSelectionIndex = inventory->selectionIndex;
+		Assert(newSelectedSlot->newGroup < MAX_NUM_INV_GROUPS);
+		i64 prevSelectionInNewGroup = inventory->groups[newSelectedSlot->newGroup].prevSelectionIndex;
+		if (prevSelectionInNewGroup >= 0 && (u64)prevSelectionInNewGroup < inventory->numSlots)
+		{
+			newSelectedSlot = &inventory->slots[prevSelectionInNewGroup];
+		}
+		else
+		{
+			newSelectedSlot = FindDefaultSlotInInventory(inventory, newSelectedSlot->newGroup);
 		}
 	}
 	
@@ -158,17 +187,39 @@ void InitInventory(Inventory_t* inventory, MemArena_t* memArena, InvType_t type)
 	inventory->type = type;
 	inventory->slots = GetInvSlotsForInvType(type, inventory->allocArena, &inventory->numSlots);
 	inventory->selectionIndex = -1;
+	inventory->numGroups = 0;
 	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
 	{
 		InvSlot_t* slot = &inventory->slots[sIndex];
 		slot->stack.id = ITEM_ID_NONE;
 		slot->stack.count = 0;
-		if (inventory->selectionIndex < 0 && slot->type != InvSlotType_Decor)
-		{
-			inventory->selectionIndex = (i64)sIndex;
-			inventory->selectionGridPos = slot->gridRec.topLeft;
-		}
 	}
+	
+	u64 numSlotsPerGroup[MAX_NUM_INV_GROUPS];
+	v2i minSlotPos[MAX_NUM_INV_GROUPS];
+	ClearArray(numSlotsPerGroup);
+	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
+	{
+		InvSlot_t* slot = &inventory->slots[sIndex];
+		Assert(slot->group < MAX_NUM_INV_GROUPS);
+		if (slot->group >= inventory->numGroups) { inventory->numGroups = slot->group+1; }
+		TrackMin((numSlotsPerGroup[slot->group] == 0), minSlotPos[slot->group].x, slot->mainRec.x);
+		TrackMin((numSlotsPerGroup[slot->group] == 0), minSlotPos[slot->group].y, slot->mainRec.y);
+		numSlotsPerGroup[slot->group]++;
+	}
+	
+	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
+	{
+		InvSlot_t* slot = &inventory->slots[sIndex];
+		slot->mainRec.topLeft -= minSlotPos[slot->group];
+	}
+	
+	for (u64 gIndex = 0; gIndex < inventory->numGroups; gIndex++)
+	{
+		inventory->groups[gIndex].prevSelectionIndex = -1;
+	}
+	
+	InvMoveSelection(inventory, Dir2_Right);
 }
 
 void OnOpenInventory(Inventory_t* inventory, bool scrollView)
@@ -186,32 +237,38 @@ void UpdateInventory(Inventory_t* inventory, Inventory_t* otherInventory)
 	{
 		v2i firstSlotSize = Vec2i_Zero;
 		v2i lastSlotSize = Vec2i_Zero;
-		inventory->contentRec = Reci_Zero;
+		InvGroup_t* mainGroup = &inventory->groups[0];
+		mainGroup->contentRec = Reci_Zero;
+		u64 foundIndex = 0;
 		for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
 		{
 			InvSlot_t* slot = &inventory->slots[sIndex];
-			
-			TrackMax(sIndex == 0, inventory->contentRec.width, slot->mainRec.width);
-			
-			if (sIndex > 0) { inventory->contentRec.height += INV_SLOT_MARGIN; }
-			inventory->contentRec.height += slot->mainRec.height;
-			
-			if (sIndex == 0) { firstSlotSize = slot->mainRec.size; }
-			lastSlotSize = slot->mainRec.size;
+			if (slot->group == 0)
+			{
+				TrackMax(foundIndex == 0, mainGroup->contentRec.width, slot->mainRec.width);
+				
+				if (foundIndex > 0) { mainGroup->contentRec.height += INV_SLOT_MARGIN; }
+				mainGroup->contentRec.height += slot->mainRec.height;
+				
+				if (foundIndex == 0) { firstSlotSize = slot->mainRec.size; }
+				lastSlotSize = slot->mainRec.size;
+				
+				foundIndex++;
+			}
 		}
 		if (inventory->numSlots > 0)
 		{
-			inventory->contentRec.height += INV_SLOT_LARGE_SIZE - INV_SLOT_SIZE;
+			mainGroup->contentRec.height += INV_SLOT_LARGE_SIZE - INV_SLOT_SIZE;
 		}
-		inventory->contentRec.topLeft = NewVec2i(INV_PADDING, INV_PADDING);
+		mainGroup->contentRec.topLeft = NewVec2i(INV_PADDING, INV_PADDING);
 		
-		inventory->mainRec.width = inventory->contentRec.width + 2*INV_PADDING;
-		inventory->mainRec.height = ScreenSize.height;
-		inventory->mainRec.x = ScreenSize.width - inventory->mainRec.width;
-		inventory->mainRec.y = 0;
+		mainGroup->mainRec.width = mainGroup->contentRec.width + 2*INV_PADDING;
+		mainGroup->mainRec.height = ScreenSize.height;
+		mainGroup->mainRec.x = ScreenSize.width - mainGroup->mainRec.width;
+		mainGroup->mainRec.y = 0;
 		
 		inventory->scrollMin = (r32)(INV_SLOT_LARGE_SIZE/2);
-		inventory->scrollMax = (r32)(inventory->contentRec.height - (INV_SLOT_LARGE_SIZE/2));
+		inventory->scrollMax = (r32)(mainGroup->contentRec.height - (INV_SLOT_LARGE_SIZE/2));
 		
 		// +==============================+
 		// |   Crank Scrolls Inventory    |
@@ -289,22 +346,57 @@ void UpdateInventory(Inventory_t* inventory, Inventory_t* otherInventory)
 				}
 			}
 		}
+		// +==============================+
+		// |       Btn_A Buys Items       |
+		// +==============================+
+		if (BtnPressedRaw(Btn_A) && inventory->type == InvType_PlayerInventory && otherInventory != nullptr)
+		{
+			if (otherInventory->selectionIndex >= 0 && (u64)otherInventory->selectionIndex < otherInventory->numSlots)
+			{
+				InvSlot_t* otherSelectedSlot = &otherInventory->slots[otherInventory->selectionIndex];
+				if (otherSelectedSlot->type == InvSlotType_Buy)
+				{
+					HandleBtnExtended(Btn_A);
+					u16 buyItemId = otherSelectedSlot->buyItemId;
+					u8 buyItemValue = GetItemValue(&gl->itemBook, buyItemId);
+					if (game->player.beanCount >= buyItemValue)
+					{
+						u64 numUnadded = TryAddItemStackToInventory(inventory, NewItemStack(buyItemId, 1));
+						if (numUnadded == 0)
+						{
+							game->player.beanCount -= buyItemValue;
+						}
+						else
+						{
+							//TODO: Add a error/notification of some kind?
+						}
+					}
+				}
+			}
+		}
 	}
 	else
 	{
-		inventory->contentRec = Reci_Zero;
-		for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
+		for (u64 gIndex = 0; gIndex < inventory->numGroups; gIndex++)
 		{
-			InvSlot_t* slot = &inventory->slots[sIndex];
-			inventory->contentRec = ReciExpandToVec2i(inventory->contentRec, slot->mainRec.topLeft);
-			inventory->contentRec = ReciExpandToVec2i(inventory->contentRec, slot->mainRec.topLeft + slot->mainRec.size);
+			InvGroup_t* group = &inventory->groups[gIndex];
+			group->contentRec = Reci_Zero;
+			for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
+			{
+				InvSlot_t* slot = &inventory->slots[sIndex];
+				if (slot->group == gIndex && slot->type != InvSlotType_GroupChange)
+				{
+					group->contentRec = ReciExpandToVec2i(group->contentRec, slot->mainRec.topLeft);
+					group->contentRec = ReciExpandToVec2i(group->contentRec, slot->mainRec.topLeft + slot->mainRec.size);
+				}
+			}
+			group->contentRec.topLeft += NewVec2i(INV_PADDING, INV_PADDING);
+			group->mainRec.size = group->contentRec.size + NewVec2i(2*INV_PADDING, 2*INV_PADDING);
+			group->mainRec.topLeft = NewVec2i(
+				ScreenSize.width / 2 - group->mainRec.width/2,
+				ScreenSize.height / 2 - group->mainRec.height/2
+			);
 		}
-		inventory->contentRec.topLeft += NewVec2i(INV_PADDING, INV_PADDING);
-		inventory->mainRec.size = inventory->contentRec.size + NewVec2i(2*INV_PADDING, 2*INV_PADDING);
-		inventory->mainRec.topLeft = NewVec2i(
-			ScreenSize.width / 2 - inventory->mainRec.width/2,
-			ScreenSize.height / 2 - inventory->mainRec.height/2
-		);
 		
 		InvSlot_t* selectedSlot = nullptr;
 		if (inventory->selectionIndex >= 0 && (u64)inventory->selectionIndex < inventory->numSlots) { selectedSlot = &inventory->slots[inventory->selectionIndex]; }
@@ -319,6 +411,21 @@ void UpdateInventory(Inventory_t* inventory, Inventory_t* otherInventory)
 		if (BtnPressed(Btn_Right)) { HandleBtnExtended(Btn_Right); selectedSlot = InvMoveSelection(inventory, Dir2_Right); }
 		if (BtnPressed(Btn_Up))    { HandleBtnExtended(Btn_Up);    selectedSlot = InvMoveSelection(inventory, Dir2_Up);    }
 		if (BtnPressed(Btn_Down))  { HandleBtnExtended(Btn_Down);  selectedSlot = InvMoveSelection(inventory, Dir2_Down);  }
+		
+		// +==============================+
+		// | Update Group Slide Animation |
+		// +==============================+
+		inventory->currentGroup = (selectedSlot != nullptr) ? selectedSlot->group : 0;
+		r32 targetSlidePos = (r32)inventory->currentGroup;
+		if (inventory->groupSlidePos < targetSlidePos)
+		{
+			
+			inventory->groupSlidePos = MinR32(inventory->groupSlidePos + TIME_SCALED_ANIM(200, TimeScale), targetSlidePos);
+		}
+		else if (inventory->groupSlidePos > targetSlidePos)
+		{
+			inventory->groupSlidePos = MaxR32(inventory->groupSlidePos - TIME_SCALED_ANIM(200, TimeScale), targetSlidePos);
+		}
 		
 		// +==============================+
 		// |    Btn_A Presses Buttons     |
@@ -339,8 +446,8 @@ void UpdateInventory(Inventory_t* inventory, Inventory_t* otherInventory)
 						// +==============================+
 						case InvButton_Combine:
 						{
-							InvSlot_t* slot1 = GetInvSlotAtGridPos(inventory, NewVec2i(0, 0));
-							InvSlot_t* slot2 = GetInvSlotAtGridPos(inventory, NewVec2i(1, 0));
+							InvSlot_t* slot1 = GetInvSlotAtGridPos(inventory, selectedSlot->group, NewVec2i(0, 0));
+							InvSlot_t* slot2 = GetInvSlotAtGridPos(inventory, selectedSlot->group, NewVec2i(1, 0));
 							if (slot1 != nullptr && slot2 != nullptr && slot1->stack.count > 0 && slot2->stack.count > 0)
 							{
 								bool successfulRecipe = false;
@@ -354,10 +461,11 @@ void UpdateInventory(Inventory_t* inventory, Inventory_t* otherInventory)
 										if (numUnadded == 0)
 										{
 											successfulRecipe = true;
+											InvGroup_t* group = &inventory->groups[slot1->group];
 											Particle_t* newPart = TrySpawnParticle(
 												&game->parts,
 												PartLayer_HighUi,
-												ToVec2(inventory->mainRec.topLeft + selectedSlot->mainRec.topLeft) + ToVec2(selectedSlot->mainRec.size) / 2,
+												ToVec2(group->mainRec.topLeft + selectedSlot->mainRec.topLeft) + ToVec2(selectedSlot->mainRec.size) / 2,
 												NewVec2(0, -1), //velocity
 												&game->entitiesSheet,
 												GetItemFrame(&gl->itemBook, recipe->outputId),
@@ -394,19 +502,10 @@ void RenderInventorySlot(InvSlot_t* slot, reci slotRec, bool inScrollView)
 {
 	MemArena_t* scratch = GetScratchArena();
 	
-	if (slot->type != InvSlotType_Decor)
+	if (slot->type != InvSlotType_Decor && slot->type != InvSlotType_GroupChange)
 	{
 		PdDrawRec(slotRec, kColorWhite);
 		PdDrawRecOutline(slotRec, 2, kColorBlack);
-	}
-	
-	if (slot->isSelected && !inScrollView)
-	{
-		r32 selectionRotation = Animate(0.0f, 1.0f, 2000);
-		PdDrawRecOutlineArc(slotRec, 5, selectionRotation + 0.00f, selectionRotation + 0.00f + 0.125f, kColorBlack);
-		PdDrawRecOutlineArc(slotRec, 5, selectionRotation + 0.25f, selectionRotation + 0.25f + 0.125f, kColorBlack);
-		PdDrawRecOutlineArc(slotRec, 5, selectionRotation + 0.50f, selectionRotation + 0.50f + 0.125f, kColorBlack);
-		PdDrawRecOutlineArc(slotRec, 5, selectionRotation + 0.75f, selectionRotation + 0.75f + 0.125f, kColorBlack);
 	}
 	
 	// +==============================+
@@ -465,6 +564,32 @@ void RenderInventorySlot(InvSlot_t* slot, reci slotRec, bool inScrollView)
 			PdDrawRecOutline(slotRec, 2, false, kColorBlack);
 		}
 	}
+	// +==============================+
+	// |    Render InvSlotType_Buy    |
+	// +==============================+
+	else if (slot->type == InvSlotType_Buy)
+	{
+		v2i itemFrame = GetItemFrame(&gl->itemBook, slot->buyItemId);
+		if (itemFrame != INVALID_FRAME)
+		{
+			reci itemRec = NewReci(
+				slotRec.x + slotRec.width/2 - INV_ITEM_SIZE/2,
+				slotRec.y + slotRec.height/2 - INV_ITEM_SIZE/2,
+				INV_ITEM_SIZE,
+				INV_ITEM_SIZE
+			);
+			PdDrawSheetFrame(game->entitiesSheet, itemFrame, itemRec);
+		}
+	}
+	
+	if (slot->isSelected && !inScrollView)
+	{
+		r32 selectionRotation = Animate(0.0f, 1.0f, 2000);
+		PdDrawRecOutlineArc(slotRec, 5, selectionRotation + 0.00f, selectionRotation + 0.00f + 0.125f, kColorBlack);
+		PdDrawRecOutlineArc(slotRec, 5, selectionRotation + 0.25f, selectionRotation + 0.25f + 0.125f, kColorBlack);
+		PdDrawRecOutlineArc(slotRec, 5, selectionRotation + 0.50f, selectionRotation + 0.50f + 0.125f, kColorBlack);
+		PdDrawRecOutlineArc(slotRec, 5, selectionRotation + 0.75f, selectionRotation + 0.75f + 0.125f, kColorBlack);
+	}
 	
 	FreeScratchArena(scratch);
 }
@@ -478,12 +603,13 @@ void RenderInventoryUi(Inventory_t* inventory, Inventory_t* otherInventory)
 	if (inventory->inScrollView)
 	{
 		i32 largeSlotDiff = (INV_SLOT_LARGE_SIZE - INV_SLOT_SIZE);
+		InvGroup_t* mainGroup = &inventory->groups[0];
 		
-		PdDrawRec(inventory->mainRec, kColorBlack);
+		PdDrawRec(mainGroup->mainRec, kColorBlack);
 		
 		v2i slotBaseOffset = NewVec2i(
-			inventory->mainRec.x + inventory->contentRec.x,
-			inventory->mainRec.y + inventory->mainRec.height/2 - RoundR32i(inventory->scroll)
+			mainGroup->mainRec.x + mainGroup->contentRec.x,
+			mainGroup->mainRec.y + mainGroup->mainRec.height/2 - RoundR32i(inventory->scroll)
 		);
 		v2i slotOffset = Vec2i_Zero;
 		for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
@@ -528,9 +654,9 @@ void RenderInventoryUi(Inventory_t* inventory, Inventory_t* otherInventory)
 		{
 			LCDBitmapDrawMode oldDrawMode = PdSetDrawMode(kDrawModeNXOR);
 			reci contentRec = NewReci(
-				inventory->mainRec.x + inventory->contentRec.x,
-				inventory->mainRec.y + inventory->mainRec.height/2 - RoundR32i(inventory->scroll),
-				inventory->contentRec.size
+				mainGroup->mainRec.x + mainGroup->contentRec.x,
+				mainGroup->mainRec.y + mainGroup->mainRec.height/2 - RoundR32i(inventory->scroll),
+				mainGroup->contentRec.size
 			);;
 			PdDrawRec(ReciInflate(contentRec, RoundR32i(Oscillate(0, 5, 1000)), 0), kColorBlack);
 			PdSetDrawMode(oldDrawMode);
@@ -540,7 +666,7 @@ void RenderInventoryUi(Inventory_t* inventory, Inventory_t* otherInventory)
 		{
 			const r32 crankHintScale = 1.0f;
 			v2i playdateCrankHintSize = PlaydateCrankHintBubble(false, true, crankHintScale, Vec2i_Zero).size;
-			v2i playdateCrankHintTarget = NewVec2i(inventory->mainRec.x, inventory->mainRec.y + inventory->mainRec.height - 5 - playdateCrankHintSize.height/2);
+			v2i playdateCrankHintTarget = NewVec2i(mainGroup->mainRec.x, mainGroup->mainRec.y + mainGroup->mainRec.height - 5 - playdateCrankHintSize.height/2);
 			PlaydateCrankHintBubble(true, true, crankHintScale, playdateCrankHintTarget);
 		}
 		
@@ -551,7 +677,7 @@ void RenderInventoryUi(Inventory_t* inventory, Inventory_t* otherInventory)
 			{
 				MyStr_t itemName = GetItemDisplayName(&gl->itemBook, selectedSlot->stack.id, (selectedSlot->stack.count > 1));
 				v2i itemNameSize = MeasureText(game->mainFont.font, itemName);
-				v2i itemNamePos = NewVec2i(inventory->mainRec.x - 2 - itemNameSize.width, 2);
+				v2i itemNamePos = NewVec2i(mainGroup->mainRec.x - 2 - itemNameSize.width, 2);
 				PdBindFont(&game->mainFont);
 				PdDrawText(itemName, itemNamePos);
 			}
@@ -559,19 +685,74 @@ void RenderInventoryUi(Inventory_t* inventory, Inventory_t* otherInventory)
 	}
 	else 
 	{
-		PdDrawRec(inventory->mainRec, kColorWhite);
-		PdDrawRecOutline(inventory->mainRec, INV_BORDER_THICKNESS, kColorBlack);
-		
-		reci contentRec = inventory->contentRec + inventory->mainRec.topLeft;
-		for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
+		// +==============================+
+		// |   Render Inv Groups/Slots    |
+		// +==============================+
+		for (u64 gIndex = 0; gIndex < inventory->numGroups; gIndex++)
 		{
-			InvSlot_t* slot = &inventory->slots[sIndex];
-			reci slotRec = slot->mainRec + contentRec.topLeft;
-			RenderInventorySlot(slot, slotRec, inventory->inScrollView);
-			if (pig->debugEnabled && inventory->selectionIndex >= 0 && (u64)inventory->selectionIndex == sIndex)
+			InvGroup_t* group = &inventory->groups[gIndex];
+			if (inventory->groupSlidePos > (r32)gIndex - 1.0f && inventory->groupSlidePos < (r32)gIndex + 1.0f)
 			{
-				PdBindFont(&pig->debugFont);
-				PdDrawTextPrint(slotRec.topLeft + NewVec2i(4, 4), "(%d, %d)", inventory->selectionGridPos.x, inventory->selectionGridPos.y);
+				reci mainRec = group->mainRec;
+				r32 animRight = SubAnimAmountR32(inventory->groupSlidePos, (r32)gIndex, (r32)gIndex - 1.0f);
+				r32 animLeft = SubAnimAmountR32(inventory->groupSlidePos, (r32)gIndex, (r32)gIndex + 1.0f);
+				mainRec.x += RoundR32i((ScreenSize.width - mainRec.x) * EaseQuadraticOut(animRight));
+				mainRec.x -= RoundR32i((mainRec.x + mainRec.width) * EaseQuadraticOut(animLeft));
+				
+				PdDrawRec(mainRec, kColorWhite);
+				PdDrawRecOutline(mainRec, INV_BORDER_THICKNESS, kColorBlack);
+				
+				// +==============================+
+				// |   Render Buying Item Name    |
+				// +==============================+
+				if (inventory->selectionIndex >= 0 && (u64)inventory->selectionIndex < inventory->numSlots)
+				{
+					InvSlot_t* selectedSlot = &inventory->slots[inventory->selectionIndex];
+					if (selectedSlot->type == InvSlotType_Buy && selectedSlot->group == gIndex)
+					{
+						MyStr_t displayName = GetItemDisplayName(&gl->itemBook, selectedSlot->buyItemId, false);
+						v2i displayNameSize = MeasureText(game->mainFont.font, displayName);
+						MyStr_t priceStr = PrintInArenaStr(scratch, "%llu", GetItemValue(&gl->itemBook, selectedSlot->buyItemId));
+						v2i priceStrSize = MeasureText(game->beanCountFont.font, priceStr);
+						v2i beanSize = game->beanTexture.size;
+						i32 totalWidth = displayNameSize.width + beanSize.width + priceStrSize.width;
+						i32 leftSide = mainRec.x + mainRec.width/2 - totalWidth/2;
+						v2i displayNamePos = NewVec2i(
+							leftSide + 0,
+							mainRec.y - displayNameSize.height
+						);
+						reci beanRec = NewReci(
+							leftSide + displayNameSize.width + ITEM_NAME_PRICE_SPACING,
+							mainRec.y - beanSize.height,
+							beanSize
+						);
+						v2i priceStrPos = NewVec2i(
+							leftSide + displayNameSize.width + ITEM_NAME_PRICE_SPACING + beanSize.width,
+							mainRec.y - displayNameSize.height
+						);
+						PdDrawTexturedRec(game->beanTexture, beanRec);
+						PdBindFont(&game->mainFont);
+						PdDrawText(displayName, displayNamePos);
+						PdBindFont(&game->beanCountFont);
+						PdDrawText(priceStr, priceStrPos);
+					}
+				}
+				
+				reci contentRec = group->contentRec + mainRec.topLeft;
+				for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
+				{
+					InvSlot_t* slot = &inventory->slots[sIndex];
+					if (slot->group == gIndex)
+					{
+						reci slotRec = slot->mainRec + contentRec.topLeft;
+						RenderInventorySlot(slot, slotRec, inventory->inScrollView);
+						if (pig->debugEnabled && inventory->selectionIndex >= 0 && (u64)inventory->selectionIndex == sIndex)
+						{
+							PdBindFont(&pig->debugFont);
+							PdDrawTextPrint(slotRec.topLeft + NewVec2i(4, 4), "(%d, %d)", inventory->selectionGridPos.x, inventory->selectionGridPos.y);
+						}
+					}
+				}
 			}
 		}
 	}

@@ -20,24 +20,30 @@ Date:   09\11\2023
 #define INV_SLOT_GROW_BIG_ANIM_TIME  200 //ms
 #define INV_SCROLL_CRANK_HINT_INACTIVE_DISPLAY_TIME   2000 //ms
 
+#define ITEM_NAME_PRICE_SPACING  20 //px
+
 enum InvSlotType_t
 {
 	InvSlotType_Default = 0,
 	InvSlotType_Button,
 	InvSlotType_ToolBtn,
 	InvSlotType_Sell,
+	InvSlotType_Buy,
 	InvSlotType_Decor,
+	InvSlotType_GroupChange,
 	InvSlotType_NumTypes,
 };
 const char* GetInvSlotTypeStr(InvSlotType_t enumValue)
 {
 	switch (enumValue)
 	{
-		case InvSlotType_Default: return "Default";
-		case InvSlotType_Button:  return "Button";
-		case InvSlotType_ToolBtn: return "ToolBtn";
-		case InvSlotType_Sell:    return "Sell";
-		case InvSlotType_Decor:   return "Decor";
+		case InvSlotType_Default:     return "Default";
+		case InvSlotType_Button:      return "Button";
+		case InvSlotType_ToolBtn:     return "ToolBtn";
+		case InvSlotType_Sell:        return "Sell";
+		case InvSlotType_Buy:         return "Buy";
+		case InvSlotType_Decor:       return "Decor";
+		case InvSlotType_GroupChange: return "GroupChange";
 		default: return "Unknown";
 	}
 }
@@ -69,7 +75,7 @@ const char* GetInvButtonDisplayStr(InvButton_t enumValue)
 struct InvSlot_t
 {
 	u64 index;
-	u64 groupId;
+	u64 group;
 	InvSlotType_t type;
 	reci gridRec;
 	ItemStack_t stack;
@@ -77,7 +83,16 @@ struct InvSlot_t
 	bool isSelected;
 	r32 selectedAnimProgress;
 	Texture_t* texturePntr;
+	u64 newGroup;
+	u16 buyItemId;
 	reci mainRec; //only size is used when in scrollView mode
+};
+
+struct InvGroup_t
+{
+	reci contentRec;
+	reci mainRec;
+	i64 prevSelectionIndex;
 };
 
 struct Inventory_t
@@ -99,8 +114,10 @@ struct Inventory_t
 	
 	bool showCrankHint;
 	
-	reci contentRec;
-	reci mainRec;
+	r32 groupSlidePos;
+	u64 currentGroup;
+	u64 numGroups;
+	InvGroup_t groups[MAX_NUM_INV_GROUPS];
 };
 
 #endif //  _GAME_INVENTORY_H
