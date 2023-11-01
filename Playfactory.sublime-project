@@ -102,6 +102,7 @@
 			"ITEM_BOOK_PATH",
 			"ITEM_COUNT_FONT_PATH",
 			"ITEM_ID_NONE",
+			"ITEM_NAME_FONT_PATH",
 			"ITEM_NAME_PRICE_SPACING",
 			"InvButton_Combine",
 			"InvButton_None",

@@ -13,6 +13,7 @@ Date:   10\27\2023
 #define BUTTON_FONT_PATH       "Resources/Fonts/pixel8"
 #define ITEM_COUNT_FONT_PATH   "Resources/Fonts/blocky"
 #define BEAN_COUNT_FONT_PATH   "Resources/Fonts/bean_font"
+#define ITEM_NAME_FONT_PATH    "Resources/Fonts/whacky_joe"
 #define DEFAULT_WORLD_SIZE     NewVec2i(100, 100)
 #define DEFAULT_WORLD_SEED     1
 #define GAME_MAX_NUM_PARTICLES 300

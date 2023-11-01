@@ -26,11 +26,18 @@ Item: Drill
 	Display: Drill, Drills
 	Frame: (1, 2)
 	Cost: 15
+
 Item: Pipe
 	Flags: Tile, Solid, InStore
 	Display: Pipe, Pipes
 	Frame: (7, 2)
 	Cost: 5
+
+Item: Ladder
+	Flags: Tile, InStore
+	Display: Ladder, Ladders
+	Frame: (0, 2)
+	Cost: 200
 
 // Item: Bag //TODO: Remove me!
 // 	Flags: InStore

@@ -25,6 +25,7 @@ struct GameState_t
 	Font_t buttonFont;
 	Font_t itemCountFont;
 	Font_t beanCountFont;
+	Font_t itemNameFont;
 	Texture_t pigTexture;
 	Sound_t testSound;
 	SpriteSheet_t kennySheet;

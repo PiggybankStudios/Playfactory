@@ -34,6 +34,8 @@ void StartAppState_Game(bool initialize, AppState_t prevState, MyStr_t transitio
 		Assert(game->itemCountFont.isValid);
 		game->beanCountFont = LoadFont(NewStr(BEAN_COUNT_FONT_PATH));
 		Assert(game->beanCountFont.isValid);
+		game->itemNameFont = LoadFont(NewStr(ITEM_NAME_FONT_PATH));
+		Assert(game->itemNameFont.isValid);
 		
 		game->pigTexture = LoadTexture(NewStr("Resources/Sprites/pig64"));
 		Assert(game->pigTexture.isValid);

@@ -599,6 +599,7 @@ void RenderInventoryUi(Inventory_t* inventory, Inventory_t* otherInventory)
 	NotNull2(inventory, inventory->allocArena);
 	MemArena_t* scratch = GetScratchArena();
 	bool isInShop = (inventory->type == InvType_Store || (otherInventory != nullptr && otherInventory->type == InvType_Store));
+	bool isSelling = (isInShop && ((inventory->type == InvType_Store && inventory->currentGroup == 0) || (otherInventory != nullptr && otherInventory->type == InvType_Store && otherInventory->currentGroup == 0)));
 	
 	if (inventory->inScrollView)
 	{
@@ -631,7 +632,7 @@ void RenderInventoryUi(Inventory_t* inventory, Inventory_t* otherInventory)
 				PdDrawTextPrint(slotRec.topLeft + NewVec2i(3, 3), "(%d, %d)", inventory->selectionGridPos.x, inventory->selectionGridPos.y);
 			}
 			
-			if (isInShop && slot->stack.count > 0)
+			if (isSelling && slot->stack.count > 0)
 			{
 				u8 itemValue = GetItemValue(&gl->itemBook, slot->stack.id);
 				if (itemValue > 0)
@@ -676,9 +677,9 @@ void RenderInventoryUi(Inventory_t* inventory, Inventory_t* otherInventory)
 			if (selectedSlot->stack.count > 0 && selectedSlot->stack.id != ITEM_ID_NONE)
 			{
 				MyStr_t itemName = GetItemDisplayName(&gl->itemBook, selectedSlot->stack.id, (selectedSlot->stack.count > 1));
-				v2i itemNameSize = MeasureText(game->mainFont.font, itemName);
+				v2i itemNameSize = MeasureText(game->itemNameFont.font, itemName);
 				v2i itemNamePos = NewVec2i(mainGroup->mainRec.x - 2 - itemNameSize.width, 2);
-				PdBindFont(&game->mainFont);
+				PdBindFont(&game->itemNameFont);
 				PdDrawText(itemName, itemNamePos);
 			}
 		}
@@ -711,11 +712,11 @@ void RenderInventoryUi(Inventory_t* inventory, Inventory_t* otherInventory)
 					if (selectedSlot->type == InvSlotType_Buy && selectedSlot->group == gIndex)
 					{
 						MyStr_t displayName = GetItemDisplayName(&gl->itemBook, selectedSlot->buyItemId, false);
-						v2i displayNameSize = MeasureText(game->mainFont.font, displayName);
+						v2i displayNameSize = MeasureText(game->itemNameFont.font, displayName);
 						MyStr_t priceStr = PrintInArenaStr(scratch, "%llu", GetItemValue(&gl->itemBook, selectedSlot->buyItemId));
 						v2i priceStrSize = MeasureText(game->beanCountFont.font, priceStr);
 						v2i beanSize = game->beanTexture.size;
-						i32 totalWidth = displayNameSize.width + beanSize.width + priceStrSize.width;
+						i32 totalWidth = displayNameSize.width + ITEM_NAME_PRICE_SPACING + beanSize.width + priceStrSize.width;
 						i32 leftSide = mainRec.x + mainRec.width/2 - totalWidth/2;
 						v2i displayNamePos = NewVec2i(
 							leftSide + 0,
@@ -731,7 +732,7 @@ void RenderInventoryUi(Inventory_t* inventory, Inventory_t* otherInventory)
 							mainRec.y - displayNameSize.height
 						);
 						PdDrawTexturedRec(game->beanTexture, beanRec);
-						PdBindFont(&game->mainFont);
+						PdBindFont(&game->itemNameFont);
 						PdDrawText(displayName, displayNamePos);
 						PdBindFont(&game->beanCountFont);
 						PdDrawText(priceStr, priceStrPos);
