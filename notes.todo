@@ -1,6 +1,5 @@
 
 # Short TODO List:
-	[ ] Add a store you can purchase things from
 	[ ] Add support for selecting items into your hand, and placing them in the world
 	[ ] Get auto-miners working
 	[ ] Get pipes working (and selling to store)
@@ -9,23 +8,21 @@
 	[ ] Add research station
 	[ ] Add research tree that research station allows viewing
 	[ ] Add chest and extractor
-	[ ] Add pickaxe to get to lower level
-	[ ] Add augmented pipes
+	[ ] Add ladder to get to lower level
+	[ ] Add augmented pipes (filter, constriction, up/down, extractor)
+	[ ] Redo world-gen
+	[!] Save games!
 
 # TODO List:
-	[ ] Inventory Types can define buttons
-	[ ] Add a shop where you can buy and sell things
+	[ ] Add text in science inventory "item1 + item2"
+	[ ] Add display name when hovering over items in regular inventory
+	[ ] Activate pipes to see whats going through them
+	[ ] Allow disabling connection of sides in box and pipes
+	[ ] Shop sell animation, bean increase particle effect
+	[ ] Shop buy bean decrease particle effect
 	[ ] "Tools" in the player inventory UI
-	[ ] Somehow you need to be able to choose an item to put in your hand
 	[ ] Box that you can buy, place, and open
 	[ ] Tool for Destroying/picking up machine/pipe/etc.
-	[ ] A ladder that lets you visit the underground layer
-	[ ] Pipes that can pull items out of boxes and route them to other connected boxes
-	[ ] An drill you can buy and place next to a resource and it produces candy automatically
-	[ ] Items piped to the shop get sold automatically
-	[ ] A crafter that can have a composite candy chosen and will accept items piped to it
-	[ ] Pipe that goes up/down to upper/lower layer
-	[ ] Filter pipe that will only allow items of a particular type past
 	[ ] Liquid chocolate that can be gathered with a pump
 	[ ] Fluid container of some kind, support for fluids in pipes
 	[ ] Bottler/Solidifier for fluids that lets you get an item so you can do science to discover recipes that take fluids
@@ -33,6 +30,11 @@
 	[ ] Pathway tiles and walls for decoration
 	( ) Double tap to run shouldn't work if you quickly press different directions (Left Up Left for example)
 
+[X] Pipe that goes up/down to upper/lower layer
+[X] Filter pipe that will only allow items of a particular type past
+[X] Add a shop where you can buy and sell things
+[X] Inventory Types can define buttons
+[X] Add a store you can purchase things from
 [X] Combine candies in PlayerScience inventory to make new candies
 [X] Selection of slots in non-scrolling inventory UIs
 [X] Put items from your inventory into the science slots
