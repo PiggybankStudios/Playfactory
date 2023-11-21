@@ -40,7 +40,7 @@ AppState_t InitGame()
 		VarArrayLoop(&gl->itemBook.items, iIndex)
 		{
 			VarArrayLoopGet(ItemDef_t, item, &gl->itemBook.items, iIndex);
-			PrintLine_D("ItemDef[%llu]: %u %.*s %02X", iIndex, item->runtimeId, item->idStr.length, item->idStr.chars, item->flags);
+			PrintLine_D("ItemDef[%llu]: %u %.*s %04X", iIndex, item->runtimeId, item->idStr.length, item->idStr.chars, item->flags);
 		}
 		#endif
 	}

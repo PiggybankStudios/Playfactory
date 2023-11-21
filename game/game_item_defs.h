@@ -9,16 +9,24 @@ Date:   10\27\2023
 
 enum ItemFlags_t
 {
-	ItemFlags_None        = 0x00,
-	ItemFlags_Tile        = 0x01,
-	ItemFlags_Solid       = 0x02,
-	ItemFlags_Meta        = 0x04,
-	ItemFlags_Underground = 0x08,
-	ItemFlags_Surface     = 0x10,
-	ItemFlags_Sky         = 0x20,
-	ItemFlags_Decor       = 0x40,
-	ItemFlags_InStore     = 0x80,
-	ItemFlags_NumFlags = 0x80,
+	ItemFlags_None        = 0x0000,
+	ItemFlags_Tile        = 0x0001,
+	ItemFlags_Solid       = 0x0002,
+	ItemFlags_Meta        = 0x0004,
+	ItemFlags_Underground = 0x0008,
+	ItemFlags_Surface     = 0x0010,
+	ItemFlags_Sky         = 0x0020,
+	ItemFlags_Decor       = 0x0040,
+	ItemFlags_InStore     = 0x0080,
+	ItemFlags_NoResearch  = 0x0100,
+	ItemFlags_Holdable    = 0x0200,
+	// ItemFlags_Unused      = 0x0400,
+	// ItemFlags_Unused      = 0x0800,
+	// ItemFlags_Unused      = 0x1000,
+	// ItemFlags_Unused      = 0x2000,
+	// ItemFlags_Unused      = 0x4000,
+	// ItemFlags_Unused      = 0x8000,
+	ItemFlags_NumFlags = 10,
 };
 const char* GetItemFlagsStr(ItemFlags_t enumValue)
 {
@@ -33,6 +41,8 @@ const char* GetItemFlagsStr(ItemFlags_t enumValue)
 		case ItemFlags_Sky:          return "Sky";
 		case ItemFlags_Decor:        return "Decor";
 		case ItemFlags_InStore:      return "InStore";
+		case ItemFlags_NoResearch:   return "NoResearch";
+		case ItemFlags_Holdable:     return "Holdable";
 		default: return "Unknown";
 	}
 }
@@ -54,7 +64,7 @@ ItemStack_t NewItemStack(u16 id, u8 count)
 struct ItemDef_t
 {
 	u16 runtimeId;
-	u8 flags; //ItemFlags_t
+	u16 flags; //ItemFlags_t
 	MyStr_t idStr;
 	MyStr_t displayName;
 	MyStr_t displayNamePlural;

@@ -31,6 +31,8 @@ enum InvSlotType_t
 	InvSlotType_Buy,
 	InvSlotType_Decor,
 	InvSlotType_GroupChange,
+	InvSlotType_Hand,
+	InvSlotType_Research,
 	InvSlotType_NumTypes,
 };
 const char* GetInvSlotTypeStr(InvSlotType_t enumValue)
@@ -44,6 +46,32 @@ const char* GetInvSlotTypeStr(InvSlotType_t enumValue)
 		case InvSlotType_Buy:         return "Buy";
 		case InvSlotType_Decor:       return "Decor";
 		case InvSlotType_GroupChange: return "GroupChange";
+		case InvSlotType_Hand:        return "Hand";
+		case InvSlotType_Research:    return "Research";
+		default: return "Unknown";
+	}
+}
+
+enum InvSlotFlags_t
+{
+	InvSlotFlags_None = 0x00,
+	InvSlotFlags_Separate = 0x01,
+	InvSlotFlags_AutoDump = 0x02,
+	// InvSlotFlags_Unused = 0x04,
+	// InvSlotFlags_Unused = 0x08,
+	// InvSlotFlags_Unused = 0x10,
+	// InvSlotFlags_Unused = 0x20,
+	// InvSlotFlags_Unused = 0x40,
+	// InvSlotFlags_Unused = 0x80,
+	InvSlotFlags_NumFlags = 8,
+};
+const char* GetInvSlotFlagsStr(InvSlotFlags_t enumValue)
+{
+	switch (enumValue)
+	{
+		case InvSlotFlags_None:     return "None";
+		case InvSlotFlags_Separate: return "Separate";
+		case InvSlotFlags_AutoDump: return "AutoDump";
 		default: return "Unknown";
 	}
 }
@@ -77,6 +105,7 @@ struct InvSlot_t
 	u64 index;
 	u64 group;
 	InvSlotType_t type;
+	u8 flags;
 	reci gridRec;
 	ItemStack_t stack;
 	InvButton_t button;
@@ -99,6 +128,7 @@ struct Inventory_t
 {
 	MemArena_t* allocArena;
 	InvType_t type;
+	u8 flags;
 	
 	u64 numSlots;
 	InvSlot_t* slots;
@@ -119,5 +149,44 @@ struct Inventory_t
 	u64 numGroups;
 	InvGroup_t groups[MAX_NUM_INV_GROUPS];
 };
+
+// +--------------------------------------------------------------+
+// |                        Enum Questions                        |
+// +--------------------------------------------------------------+
+bool IsInvSlotTypeSelectable(InvSlotType_t slotType)
+{
+	switch (slotType)
+	{
+		case InvSlotType_Decor:  return false;
+		default: return true;
+	}
+}
+bool DoesInvSlotTypeHoldItems(InvSlotType_t slotType)
+{
+	switch (slotType)
+	{
+		case InvSlotType_Default:  return true;
+		case InvSlotType_Hand:     return true;
+		case InvSlotType_Research: return true;
+		default: return false;
+	}
+}
+bool IsInvSlotTypeVisible(InvSlotType_t slotType)
+{
+	switch (slotType)
+	{
+		case InvSlotType_GroupChange: return false;
+		default: return true;
+	}
+}
+bool DoesInvSlotTypeRenderOutline(InvSlotType_t slotType)
+{
+	switch (slotType)
+	{
+		case InvSlotType_Decor:       return false;
+		case InvSlotType_GroupChange: return false;
+		default: return true;
+	}
+}
 
 #endif //  _GAME_INVENTORY_H

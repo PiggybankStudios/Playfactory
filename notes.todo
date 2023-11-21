@@ -1,6 +1,8 @@
 
 # Short TODO List:
-	[ ] Add support for selecting items into your hand, and placing them in the world
+	[ ] Add flag to "auto-dump" items in a slot back to the inventory when the ui is closed
+	( ) Fix swapping behavior so we can restack split stacks when working with science inventory
+	( ) While within a gridRec for a slot, if I push left, we should start our search for the target slot by first moving to the left of the gridRec for the currently selected slot
 	[ ] Get auto-miners working
 	[ ] Get pipes working (and selling to store)
 	[ ] Add combiner
@@ -28,8 +30,10 @@
 	[ ] Bottler/Solidifier for fluids that lets you get an item so you can do science to discover recipes that take fluids
 	[ ] Upgrades for pickaxe, inventory size, box size, pipe speed, miner speed, crafter speed, etc.
 	[ ] Pathway tiles and walls for decoration
+	[ ] Add some way to pick up or move partial stacks
 	( ) Double tap to run shouldn't work if you quickly press different directions (Left Up Left for example)
 
+[X] Add support for selecting items into your hand, and placing them in the world
 [X] Pipe that goes up/down to upper/lower layer
 [X] Filter pipe that will only allow items of a particular type past
 [X] Add a shop where you can buy and sell things

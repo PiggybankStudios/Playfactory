@@ -52,12 +52,26 @@ u8 TryAddItemStackToInventory(Inventory_t* inventory, ItemStack_t stack)
 	return countLeft;
 }
 
+InvSlot_t* GetInvSlotByType(Inventory_t* inventory, u64 group, InvSlotType_t type, u64 index = 0)
+{
+	u64 foundIndex = 0;
+	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
+	{
+		InvSlot_t* slot = &inventory->slots[sIndex];
+		if (slot->group == group && slot->type == type)
+		{
+			if (foundIndex >= index) { return slot; }
+			foundIndex++;
+		}
+	}
+	return nullptr;
+}
 InvSlot_t* GetInvSlotAtGridPos(Inventory_t* inventory, u64 group, v2i gridPos)
 {
 	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
 	{
 		InvSlot_t* slot = &inventory->slots[sIndex];
-		if (slot->group == group && IsInsideReci(slot->gridRec, gridPos) && slot->type != InvSlotType_Decor) { return slot; }
+		if (slot->group == group && IsInsideReci(slot->gridRec, gridPos) && IsInvSlotTypeSelectable(slot->type)) { return slot; }
 	}
 	return nullptr;
 }
@@ -67,7 +81,7 @@ InvSlot_t* GetInvSlotMaxOrMinInRow(Inventory_t* inventory, u64 group, i32 row, b
 	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
 	{
 		InvSlot_t* slot = &inventory->slots[sIndex];
-		if (slot->group == group && slot->type != InvSlotType_GroupChange && row >= slot->gridRec.y && row < slot->gridRec.y + slot->gridRec.height)
+		if (slot->group == group && IsInvSlotTypeSelectable(slot->type) && slot->type != InvSlotType_GroupChange && row >= slot->gridRec.y && row < slot->gridRec.y + slot->gridRec.height)
 		{
 			if (result == nullptr) { result = slot; }
 			else if (slot->gridRec.x + slot->gridRec.width > result->gridRec.x + result->gridRec.width && findMax) { result = slot; }
@@ -82,7 +96,7 @@ InvSlot_t* GetInvSlotMaxOrMinInCol(Inventory_t* inventory, u64 group, i32 column
 	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
 	{
 		InvSlot_t* slot = &inventory->slots[sIndex];
-		if (slot->group == group && slot->type != InvSlotType_GroupChange && column >= slot->gridRec.x && column < slot->gridRec.x + slot->gridRec.width)
+		if (slot->group == group && IsInvSlotTypeSelectable(slot->type) && slot->type != InvSlotType_GroupChange && column >= slot->gridRec.x && column < slot->gridRec.x + slot->gridRec.width)
 		{
 			if (result == nullptr) { result = slot; }
 			else if (slot->gridRec.y + slot->gridRec.height > result->gridRec.y + result->gridRec.height && findMax) { result = slot; }
@@ -98,7 +112,7 @@ InvSlot_t* FindDefaultSlotInInventory(Inventory_t* inventory, u64 group = MAX_NU
 	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
 	{
 		InvSlot_t* slot = &inventory->slots[sIndex];
-		if (slot->type != InvSlotType_Decor && slot->type != InvSlotType_GroupChange &&
+		if (IsInvSlotTypeSelectable(slot->type) && slot->type != InvSlotType_GroupChange &&
 			(group == MAX_NUM_INV_GROUPS || slot->group == group))
 		{
 			if (result == nullptr) { result = slot; }
@@ -203,8 +217,11 @@ void InitInventory(Inventory_t* inventory, MemArena_t* memArena, InvType_t type)
 		InvSlot_t* slot = &inventory->slots[sIndex];
 		Assert(slot->group < MAX_NUM_INV_GROUPS);
 		if (slot->group >= inventory->numGroups) { inventory->numGroups = slot->group+1; }
-		TrackMin((numSlotsPerGroup[slot->group] == 0), minSlotPos[slot->group].x, slot->mainRec.x);
-		TrackMin((numSlotsPerGroup[slot->group] == 0), minSlotPos[slot->group].y, slot->mainRec.y);
+		if (!IsFlagSet(slot->flags, InvSlotFlags_Separate))
+		{
+			TrackMin((numSlotsPerGroup[slot->group] == 0), minSlotPos[slot->group].x, slot->mainRec.x);
+			TrackMin((numSlotsPerGroup[slot->group] == 0), minSlotPos[slot->group].y, slot->mainRec.y);
+		}
 		numSlotsPerGroup[slot->group]++;
 	}
 	
@@ -227,6 +244,50 @@ void OnOpenInventory(Inventory_t* inventory, bool scrollView)
 	NotNull2(inventory, inventory->allocArena);
 	inventory->inScrollView = scrollView;
 	inventory->showCrankHint = true;
+}
+void OnCloseInventory(Inventory_t* inventory, Inventory_t* otherInventory)
+{
+	NotNull2(inventory, inventory->allocArena);
+	for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
+	{
+		InvSlot_t* slot = &inventory->slots[sIndex];
+		if (IsFlagSet(slot->flags, InvSlotFlags_AutoDump) && slot->stack.count > 0 && otherInventory != nullptr)
+		{
+			u8 numUnadded = TryAddItemStackToInventory(otherInventory, slot->stack);
+			if (numUnadded == 0)
+			{
+				slot->stack.id = ITEM_ID_NONE;
+				slot->stack.count = 0;
+			}
+			else
+			{
+				slot->stack.count = numUnadded;
+			}
+		}
+	}
+}
+
+bool CanStackGoInSlot(ItemStack_t stack, const InvSlot_t* slot)
+{
+	NotNull(slot);
+	u16 itemFlags = GetItemFlags(&gl->itemBook, stack.id);
+	if (stack.count == 0)
+	{
+		return true;
+	}
+	else if (!DoesInvSlotTypeHoldItems(slot->type))
+	{
+		return false;
+	}
+	else if (IsFlagSet(itemFlags, ItemFlags_NoResearch) && slot->type == InvSlotType_Research)
+	{
+		return false;
+	}
+	else if (!IsFlagSet(itemFlags, ItemFlags_Holdable) && slot->type == InvSlotType_Hand)
+	{
+		return false;
+	}
+	return true;
 }
 
 void UpdateInventory(Inventory_t* inventory, Inventory_t* otherInventory)
@@ -312,13 +373,20 @@ void UpdateInventory(Inventory_t* inventory, Inventory_t* otherInventory)
 				if (otherInventory->selectionIndex >= 0 && (u64)otherInventory->selectionIndex < otherInventory->numSlots)
 				{
 					InvSlot_t* otherSelectedSlot = &otherInventory->slots[otherInventory->selectionIndex];
-					if (ourSelectedSlot->type == InvSlotType_Default && otherSelectedSlot->type == InvSlotType_Default)
+					if (DoesInvSlotTypeHoldItems(ourSelectedSlot->type) && DoesInvSlotTypeHoldItems(otherSelectedSlot->type))
 					{
 						HandleBtnExtended(Btn_A);
-						ItemStack_t tempStack;
-						MyMemCopy(&tempStack, &otherSelectedSlot->stack, sizeof(ItemStack_t));
-						MyMemCopy(&otherSelectedSlot->stack, &ourSelectedSlot->stack, sizeof(ItemStack_t));
-						MyMemCopy(&ourSelectedSlot->stack, &tempStack, sizeof(ItemStack_t));
+						if (CanStackGoInSlot(ourSelectedSlot->stack, otherSelectedSlot) && CanStackGoInSlot(otherSelectedSlot->stack, ourSelectedSlot))
+						{
+							ItemStack_t tempStack;
+							MyMemCopy(&tempStack, &otherSelectedSlot->stack, sizeof(ItemStack_t));
+							MyMemCopy(&otherSelectedSlot->stack, &ourSelectedSlot->stack, sizeof(ItemStack_t));
+							MyMemCopy(&ourSelectedSlot->stack, &tempStack, sizeof(ItemStack_t));
+						}
+						else
+						{
+							//TODO: Play a sound effect and/or some animation to indicate the transfer is not allowed
+						}
 					}
 				}
 			}
@@ -333,7 +401,7 @@ void UpdateInventory(Inventory_t* inventory, Inventory_t* otherInventory)
 			{
 				InvSlot_t* selectedSlot = &inventory->slots[inventory->selectionIndex];
 				InvSlot_t* otherSelectedSlot = &otherInventory->slots[otherInventory->selectionIndex];
-				if (selectedSlot->type == InvSlotType_Default && otherSelectedSlot->type == InvSlotType_Sell)
+				if (DoesInvSlotTypeHoldItems(selectedSlot->type) && otherSelectedSlot->type == InvSlotType_Sell)
 				{
 					HandleBtnExtended(Btn_A);
 					if (selectedSlot->stack.count > 0 && selectedSlot->stack.id != ITEM_ID_NONE)
@@ -384,7 +452,7 @@ void UpdateInventory(Inventory_t* inventory, Inventory_t* otherInventory)
 			for (u64 sIndex = 0; sIndex < inventory->numSlots; sIndex++)
 			{
 				InvSlot_t* slot = &inventory->slots[sIndex];
-				if (slot->group == gIndex && slot->type != InvSlotType_GroupChange)
+				if (slot->group == gIndex && IsInvSlotTypeVisible(slot->type) && !IsFlagSet(slot->flags, InvSlotFlags_Separate))
 				{
 					group->contentRec = ReciExpandToVec2i(group->contentRec, slot->mainRec.topLeft);
 					group->contentRec = ReciExpandToVec2i(group->contentRec, slot->mainRec.topLeft + slot->mainRec.size);
@@ -446,8 +514,8 @@ void UpdateInventory(Inventory_t* inventory, Inventory_t* otherInventory)
 						// +==============================+
 						case InvButton_Combine:
 						{
-							InvSlot_t* slot1 = GetInvSlotAtGridPos(inventory, selectedSlot->group, NewVec2i(0, 0));
-							InvSlot_t* slot2 = GetInvSlotAtGridPos(inventory, selectedSlot->group, NewVec2i(1, 0));
+							InvSlot_t* slot1 = GetInvSlotByType(inventory, selectedSlot->group, InvSlotType_Research, 0);
+							InvSlot_t* slot2 = GetInvSlotByType(inventory, selectedSlot->group, InvSlotType_Research, 1);
 							if (slot1 != nullptr && slot2 != nullptr && slot1->stack.count > 0 && slot2->stack.count > 0)
 							{
 								bool successfulRecipe = false;
@@ -500,46 +568,23 @@ void UpdateInventory(Inventory_t* inventory, Inventory_t* otherInventory)
 
 void RenderInventorySlot(InvSlot_t* slot, reci slotRec, bool inScrollView)
 {
+	if (!IsInvSlotTypeVisible(slot->type)) { return; }
+	
 	MemArena_t* scratch = GetScratchArena();
 	
-	if (slot->type != InvSlotType_Decor && slot->type != InvSlotType_GroupChange)
+	// +==============================+
+	// |     Render Slot Outline      |
+	// +==============================+
+	if (DoesInvSlotTypeRenderOutline(slot->type))
 	{
 		PdDrawRec(slotRec, kColorWhite);
 		PdDrawRecOutline(slotRec, 2, kColorBlack);
 	}
 	
 	// +==============================+
-	// |  Render InvSlotType_Default  |
-	// +==============================+
-	if (slot->type == InvSlotType_Default)
-	{
-		if (slot->stack.count > 0)
-		{
-			v2i itemFrame = GetItemFrame(&gl->itemBook, slot->stack.id);
-			if (itemFrame != INVALID_FRAME)
-			{
-				reci itemRec = NewReci(
-					slotRec.x + slotRec.width/2 - INV_ITEM_SIZE/2,
-					slotRec.y + slotRec.height/2 - INV_ITEM_SIZE/2,
-					INV_ITEM_SIZE,
-					INV_ITEM_SIZE
-				);
-				PdDrawSheetFrame(game->entitiesSheet, itemFrame, itemRec);
-			}
-			
-			MyStr_t countStr = PrintInArenaStr(scratch, "%u", slot->stack.count);
-			v2i countStrSize = MeasureText(game->itemCountFont.font, countStr);
-			v2i countStrPos = slotRec.topLeft + slotRec.size - NewVec2i(5, 2) - countStrSize;
-			PdBindFont(&game->itemCountFont);
-			// LCDBitmapDrawMode oldDrawMode = PdSetDrawMode(kDrawModeNXOR);
-			PdDrawText(countStr, countStrPos);
-			// PdSetDrawMode(oldDrawMode);
-		}
-	}
-	// +==============================+
 	// |  Render InvSlotType_Button   |
 	// +==============================+
-	else if (slot->type == InvSlotType_Button)
+	if (slot->type == InvSlotType_Button)
 	{
 		PdBindFont(&game->buttonFont);
 		MyStr_t displayStr = NewStr(GetInvButtonDisplayStr(slot->button));
@@ -581,7 +626,62 @@ void RenderInventorySlot(InvSlot_t* slot, reci slotRec, bool inScrollView)
 			PdDrawSheetFrame(game->entitiesSheet, itemFrame, itemRec);
 		}
 	}
+	// +==============================+
+	// |   Render InvSlotType_Hand    |
+	// +==============================+
+	else if (slot->type == InvSlotType_Hand)
+	{
+		v2i handIconSize = game->uiIconsSheet.frameSize;
+		reci handIconRec = NewReci(
+			slotRec.x + slotRec.width/2 - handIconSize.width/2,
+			slotRec.y + slotRec.height/2 - handIconSize.height/2,
+			handIconSize
+		);
+		PdDrawSheetFrame(game->uiIconsSheet, NewVec2i(1, 0), handIconRec);
+		
+		MyStr_t handText = NewStr("Hand");
+		v2i handTextSize = MeasureText(game->mainFont.font, handText);
+		v2i handTextPos = NewVec2i(
+			slotRec.x + slotRec.width/2 - handTextSize.width/2,
+			slotRec.y - handTextSize.height
+		);
+		if (handTextPos.x < 0) { handTextPos.x = 0; }
+		PdBindFont(&game->mainFont);
+		PdDrawText(handText, handTextPos);
+	}
 	
+	// +==============================+
+	// |      Render Slot Items       |
+	// +==============================+
+	if (DoesInvSlotTypeHoldItems(slot->type))
+	{
+		if (slot->stack.count > 0)
+		{
+			v2i itemFrame = GetItemFrame(&gl->itemBook, slot->stack.id);
+			if (itemFrame != INVALID_FRAME)
+			{
+				reci itemRec = NewReci(
+					slotRec.x + slotRec.width/2 - INV_ITEM_SIZE/2,
+					slotRec.y + slotRec.height/2 - INV_ITEM_SIZE/2,
+					INV_ITEM_SIZE,
+					INV_ITEM_SIZE
+				);
+				PdDrawSheetFrame(game->entitiesSheet, itemFrame, itemRec);
+			}
+			
+			MyStr_t countStr = PrintInArenaStr(scratch, "%u", slot->stack.count);
+			v2i countStrSize = MeasureText(game->itemCountFont.font, countStr);
+			v2i countStrPos = slotRec.topLeft + slotRec.size - NewVec2i(5, 2) - countStrSize;
+			PdBindFont(&game->itemCountFont);
+			// LCDBitmapDrawMode oldDrawMode = PdSetDrawMode(kDrawModeNXOR);
+			PdDrawText(countStr, countStrPos);
+			// PdSetDrawMode(oldDrawMode);
+		}
+	}
+	
+	// +==============================+
+	// |    Render Slot Selection     |
+	// +==============================+
 	if (slot->isSelected && !inScrollView)
 	{
 		r32 selectionRotation = Animate(0.0f, 1.0f, 2000);

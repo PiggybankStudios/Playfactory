@@ -9,7 +9,7 @@ Description:
 */
 
 InvSlot_t* _TwoPassAddInvSlot(InvSlot_t* slots, u64 numSlots, u64* slotIndex,
-	InvSlotType_t type, u64 group, reci gridRec, v2i position,
+	InvSlotType_t type, u8 flags, u64 group, reci gridRec, v2i position,
 	Texture_t* texturePntr, u64 newGroup, u16 buyItemId)
 {
 	InvSlot_t* result = nullptr;
@@ -20,6 +20,7 @@ InvSlot_t* _TwoPassAddInvSlot(InvSlot_t* slots, u64 numSlots, u64* slotIndex,
 		ClearPointer(result);
 		result->index = *slotIndex;
 		result->type = type;
+		result->flags = flags;
 		result->group = group;
 		result->gridRec = gridRec;
 		result->stack = NewItemStack(ITEM_ID_NONE, 0);
@@ -43,11 +44,11 @@ InvSlot_t* _TwoPassAddInvSlot(InvSlot_t* slots, u64 numSlots, u64* slotIndex,
 
 InvSlot_t* GetInvSlotsForInvType(InvType_t type, MemArena_t* memArena, u64* numSlotsOut)
 {
-	#define AddInvSlot(type, group, gridRec, position) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, (type), (group), (gridRec), (position), nullptr, 0, ITEM_ID_NONE)
-	#define AddInvSlotSimple(group, gridPos) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, InvSlotType_Default, (group), NewReci((gridPos), 1, 1), Vec2iMultiply((gridPos), Vec2iFill(INV_SLOT_SIZE + INV_SLOT_MARGIN)), nullptr, 0, ITEM_ID_NONE)
-	#define AddInvSlotDecor(group, position, texturePntr) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, InvSlotType_Decor, (group), Reci_Zero, (position), (texturePntr), 0, ITEM_ID_NONE)
-	#define AddInvSlotBuy(group, gridPos, buyItemId) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, InvSlotType_Buy, (group), NewReci((gridPos), 1, 1), Vec2iMultiply((gridPos), Vec2iFill(INV_SLOT_SIZE + INV_SLOT_MARGIN)), nullptr, 0, (buyItemId))
-	#define AddInvSlotGroupChange(group, gridRec, newGroup) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, InvSlotType_GroupChange, (group), (gridRec), NewVec2i(0, 0), nullptr, (newGroup), ITEM_ID_NONE)
+	#define AddInvSlot(type, flags, group, gridRec, position) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, (type), (flags), (group), (gridRec), (position), nullptr, 0, ITEM_ID_NONE)
+	#define AddInvSlotSimple(group, gridPos) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, InvSlotType_Default, 0x00, (group), NewReci((gridPos), 1, 1), Vec2iMultiply((gridPos), Vec2iFill(INV_SLOT_SIZE + INV_SLOT_MARGIN)), nullptr, 0, ITEM_ID_NONE)
+	#define AddInvSlotDecor(flags, group, position, texturePntr) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, InvSlotType_Decor, (flags), (group), Reci_Zero, (position), (texturePntr), 0, ITEM_ID_NONE)
+	#define AddInvSlotBuy(flags, group, gridPos, buyItemId) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, InvSlotType_Buy, (flags), (group), NewReci((gridPos), 1, 1), Vec2iMultiply((gridPos), Vec2iFill(INV_SLOT_SIZE + INV_SLOT_MARGIN)), nullptr, 0, (buyItemId))
+	#define AddInvSlotGroupChange(group, gridRec, newGroup) _TwoPassAddInvSlot(slots, numSlots, &slotIndex, InvSlotType_GroupChange, 0x00, (group), (gridRec), NewVec2i(0, 0), nullptr, (newGroup), ITEM_ID_NONE)
 	
 	#define TwoPassAddSlotLoopStart() for (pass = 0; pass < 2; pass++)
 	#define TwoPassAddSlotLoopEnd() do                                    \
@@ -69,6 +70,9 @@ InvSlot_t* GetInvSlotsForInvType(InvType_t type, MemArena_t* memArena, u64* numS
 	u8 pass = 0;
 	switch (type)
 	{
+		// +========================================+
+		// | InvType_PlayerInventory Implementation |
+		// +========================================+
 		case InvType_PlayerInventory:
 		{
 			TwoPassAddSlotLoopStart()
@@ -85,6 +89,9 @@ InvSlot_t* GetInvSlotsForInvType(InvType_t type, MemArena_t* memArena, u64* numS
 				TwoPassAddSlotLoopEnd();
 			}
 		} break;
+		// +======================================+
+		// | InvType_PlayerScience Implementation |
+		// +======================================+
 		case InvType_PlayerScience:
 		{
 			TwoPassAddSlotLoopStart()
@@ -94,20 +101,25 @@ InvSlot_t* GetInvSlotsForInvType(InvType_t type, MemArena_t* memArena, u64* numS
 				v2i iconSize = game->scienceIconTexture.size;
 				i32 rightSlotX = INV_SLOT_SIZE + 2*INV_SLOT_MARGIN + iconSize.width;
 				
-				AddInvSlot(InvSlotType_Default, 0, NewReci(0, 0, 1, 1), NewVec2i(0, iconSize.height/2 - INV_SLOT_SIZE/2 - 10));
-				AddInvSlot(InvSlotType_Default, 0, NewReci(1, 0, 1, 1), NewVec2i(rightSlotX, iconSize.height/2 - INV_SLOT_SIZE/2 - 10));
-				InvSlot_t* buttonSlot = AddInvSlot(InvSlotType_Button, 0, NewReci(0, 1, 2, 1), NewVec2i(INV_SLOT_SIZE + INV_SLOT_MARGIN + iconSize.width/2 - INV_SLOT_SIZE/2 - 8, iconSize.height + INV_SLOT_MARGIN));
+				AddInvSlot(InvSlotType_Research, InvSlotFlags_AutoDump, 0, NewReci(0, 0, 1, 1), NewVec2i(0, iconSize.height/2 - INV_SLOT_SIZE/2 - 10));
+				AddInvSlot(InvSlotType_Research, InvSlotFlags_AutoDump, 0, NewReci(1, 0, 1, 1), NewVec2i(rightSlotX, iconSize.height/2 - INV_SLOT_SIZE/2 - 10));
+				InvSlot_t* buttonSlot = AddInvSlot(InvSlotType_Button, 0x00, 0, NewReci(0, 1, 2, 1), NewVec2i(INV_SLOT_SIZE + INV_SLOT_MARGIN + iconSize.width/2 - INV_SLOT_SIZE/2 - 8, iconSize.height + INV_SLOT_MARGIN));
 				if (buttonSlot != nullptr)
 				{
 					buttonSlot->button = InvButton_Combine;
 					buttonSlot->mainRec.width += 15;
 				}
 				
-				AddInvSlotDecor(0, NewVec2i(INV_SLOT_SIZE + INV_SLOT_MARGIN, 0), &game->scienceIconTexture);
+				AddInvSlotDecor(0x00, 0, NewVec2i(INV_SLOT_SIZE + INV_SLOT_MARGIN, 0), &game->scienceIconTexture);
+				
+				AddInvSlot(InvSlotType_Hand, InvSlotFlags_Separate, 0, NewReci(-1, 0, 1, 2), NewVec2i(-125 + 15, 127 - 15));
 				
 				TwoPassAddSlotLoopEnd();
 			}
 		} break;
+		// +==================================+
+		// | InvType_SmallBox Implementation  |
+		// +==================================+
 		case InvType_SmallBox:
 		{
 			TwoPassAddSlotLoopStart()
@@ -122,6 +134,9 @@ InvSlot_t* GetInvSlotsForInvType(InvType_t type, MemArena_t* memArena, u64* numS
 				TwoPassAddSlotLoopEnd();
 			}
 		} break;
+		// +==============================+
+		// | InvType_Store Implementation |
+		// +==============================+
 		case InvType_Store:
 		{
 			TwoPassAddSlotLoopStart()
@@ -135,8 +150,8 @@ InvSlot_t* GetInvSlotsForInvType(InvType_t type, MemArena_t* memArena, u64* numS
 				v2i signSize = game->beanMarketSignTexture.size;
 				
 				// AddInvSlotGroupChange(groupBank, NewReci(-1, 0, 1, 1000), groupBank);
-				AddInvSlot(InvSlotType_Sell, groupCounter, NewReci(0, 0, 1, 1), NewVec2i(signSize.width/2 - INV_SLOT_SIZE/2, 5 + signSize.height));
-				AddInvSlotDecor(groupCounter, NewVec2i(0, 0), &game->beanMarketSignTexture);
+				AddInvSlot(InvSlotType_Sell, 0x00, groupCounter, NewReci(0, 0, 1, 1), NewVec2i(signSize.width/2 - INV_SLOT_SIZE/2, 5 + signSize.height));
+				AddInvSlotDecor(0x00, groupCounter, NewVec2i(0, 0), &game->beanMarketSignTexture);
 				AddInvSlotGroupChange(groupCounter, NewReci(1, 0, 1, 1000), groupMarket);
 				
 				AddInvSlotGroupChange(groupMarket, NewReci(-1, 0, 1, 1000), groupCounter);
@@ -147,7 +162,7 @@ InvSlot_t* GetInvSlotsForInvType(InvType_t type, MemArena_t* memArena, u64* numS
 					VarArrayLoopGet(ItemDef_t, itemDef, &gl->itemBook.items, iIndex);
 					if (IsFlagSet(itemDef->flags, ItemFlags_InStore))
 					{
-						AddInvSlotBuy(groupMarket, currentGridPos, itemDef->runtimeId);
+						AddInvSlotBuy(0x00, groupMarket, currentGridPos, itemDef->runtimeId);
 						TrackMax((iIndex == 0), marketColumnWidth, currentGridPos.x+1);
 						currentGridPos.x++;
 						if (currentGridPos.x >= MARKET_NUM_COLUMNS) { currentGridPos.x = 0; currentGridPos.y++; }

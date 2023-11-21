@@ -32,6 +32,7 @@ struct GameState_t
 	SpriteSheet_t playerSheet;
 	SpriteSheet_t playerMiningSheet;
 	SpriteSheet_t entitiesSheet;
+	SpriteSheet_t uiIconsSheet;
 	Texture_t beanTexture;
 	Texture_t beanMarketSignTexture;
 	Texture_t scienceIconTexture;

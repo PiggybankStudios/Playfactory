@@ -22,19 +22,19 @@ Item: StoreBR
 	Inventory: Store
 
 Item: Drill
-	Flags: Tile, Solid, InStore
+	Flags: Tile, Solid, InStore, NoResearch, Holdable
 	Display: Drill, Drills
 	Frame: (1, 2)
 	Cost: 15
 
 Item: Pipe
-	Flags: Tile, Solid, InStore
+	Flags: Tile, Solid, InStore, NoResearch, Holdable
 	Display: Pipe, Pipes
-	Frame: (7, 2)
+	Frame: (7, 4)
 	Cost: 5
 
 Item: Ladder
-	Flags: Tile, InStore
+	Flags: Tile, InStore, NoResearch, Holdable
 	Display: Ladder, Ladders
 	Frame: (0, 2)
 	Cost: 200

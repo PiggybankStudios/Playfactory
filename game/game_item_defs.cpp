@@ -129,7 +129,7 @@ ItemStack_t GetItemDrop(ItemBook_t* book, u16 runtimeId)
 	if (itemDef != nullptr) { return itemDef->dropStack; }
 	else { return NewItemStack(ITEM_ID_NONE, 0); }
 }
-ItemDef_t* GetRandomItemWithFlag(ItemBook_t* book, u8 flag, u8 notFlag = ItemFlags_None)
+ItemDef_t* GetRandomItemWithFlag(ItemBook_t* book, u16 flag, u16 notFlag = ItemFlags_None)
 {
 	u64 numMatches = 0;
 	VarArrayLoop(&book->items, iIndex)
@@ -155,6 +155,13 @@ ItemDef_t* GetRandomItemWithFlag(ItemBook_t* book, u8 flag, u8 notFlag = ItemFla
 	
 	AssertMsg(false, "Unreachable!");
 	return nullptr;
+}
+u16 GetItemFlags(ItemBook_t* book, u16 runtimeId)
+{
+	NotNull(book);
+	ItemDef_t* itemDef = FindItemDef(book, runtimeId);
+	if (itemDef != nullptr) { return itemDef->flags; }
+	else { return 0; }
 }
 u8 GetItemValue(ItemBook_t* book, u16 runtimeId)
 {

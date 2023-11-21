@@ -57,6 +57,8 @@ void StartAppState_Game(bool initialize, AppState_t prevState, MyStr_t transitio
 		Assert(game->playerMiningSheet.isValid);
 		game->entitiesSheet = LoadSpriteSheet(NewStr("Resources/Sheets/entities"), 8);
 		Assert(game->entitiesSheet.isValid);
+		game->uiIconsSheet = LoadSpriteSheet(NewStr("Resources/Sheets/ui_icons"), 8);
+		Assert(game->uiIconsSheet.isValid);
 		
 		InitParticleSystem(&game->parts, mainHeap, GAME_MAX_NUM_PARTICLES);
 		InitWorld(&game->world, mainHeap, DEFAULT_WORLD_SIZE, DEFAULT_WORLD_SEED);
@@ -110,7 +112,7 @@ void UpdateAppState_Game()
 	UpdateParticleSystem(&game->parts);
 	
 	// +==============================+
-	// |            Btn_B             |
+	// | Btn_B Opens/Closes Inventory |
 	// +==============================+
 	if (BtnReleased(Btn_B))
 	{
@@ -122,6 +124,8 @@ void UpdateAppState_Game()
 		}
 		else
 		{
+			if (game->openInventory != nullptr) { OnCloseInventory(game->openInventory, game->openScrollInventory); }
+			if (game->openScrollInventory != nullptr) { OnCloseInventory(game->openScrollInventory, game->openInventory); }
 			game->openInventory = nullptr;
 			game->openScrollInventory = nullptr;
 		}
