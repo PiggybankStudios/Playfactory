@@ -9,9 +9,11 @@ Date:   09\10\2023
 
 struct WorldTile_t
 {
-	u16 itemId;
 	v2i pos;
 	bool isSolid;
+	u16 generatedId;
+	u16 groundId;
+	u16 placedId;
 };
 
 struct World_t

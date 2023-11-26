@@ -26,19 +26,57 @@ bool IsSolidWorldTileAt(World_t* world, v2i tilePos)
 	return world->tiles[tilePos.y * world->size.width + tilePos.x].isSolid;
 }
 
-void SetWorldTile(World_t* world, WorldTile_t* tilePntr, u16 itemId)
+void SetGeneratedWorldTile(World_t* world, WorldTile_t* tilePntr, u16 itemId)
 {
 	NotNull2(world, tilePntr);
-	tilePntr->itemId = itemId;
-	tilePntr->isSolid = IsItemSolid(&gl->itemBook, itemId);
+	tilePntr->generatedId = itemId;
+	tilePntr->isSolid =
+		IsItemSolid(&gl->itemBook, tilePntr->generatedId) ||
+		IsItemSolid(&gl->itemBook, tilePntr->groundId) ||
+		IsItemSolid(&gl->itemBook, tilePntr->placedId);
 }
-void SetWorldTileAt(World_t* world, v2i tilePos, u16 itemId)
+void SetGroundWorldTile(World_t* world, WorldTile_t* tilePntr, u16 itemId)
+{
+	NotNull2(world, tilePntr);
+	tilePntr->groundId = itemId;
+	tilePntr->isSolid =
+		IsItemSolid(&gl->itemBook, tilePntr->generatedId) ||
+		IsItemSolid(&gl->itemBook, tilePntr->groundId) ||
+		IsItemSolid(&gl->itemBook, tilePntr->placedId);
+}
+void SetPlacedWorldTile(World_t* world, WorldTile_t* tilePntr, u16 itemId)
+{
+	NotNull2(world, tilePntr);
+	tilePntr->placedId = itemId;
+	tilePntr->isSolid =
+		IsItemSolid(&gl->itemBook, tilePntr->generatedId) ||
+		IsItemSolid(&gl->itemBook, tilePntr->groundId) ||
+		IsItemSolid(&gl->itemBook, tilePntr->placedId);
+}
+
+void SetGeneratedWorldTileAt(World_t* world, v2i tilePos, u16 itemId)
 {
 	NotNull(world);
 	WorldTile_t* tile = GetWorldTileAt(world, tilePos);
 	AssertMsg(tile != nullptr, "Tried to set tile outside the bounds of the world!");
 	Assert(tile->pos == tilePos);
-	SetWorldTile(world, tile, itemId);
+	SetGeneratedWorldTile(world, tile, itemId);
+}
+void SetGroundWorldTileAt(World_t* world, v2i tilePos, u16 itemId)
+{
+	NotNull(world);
+	WorldTile_t* tile = GetWorldTileAt(world, tilePos);
+	AssertMsg(tile != nullptr, "Tried to set tile outside the bounds of the world!");
+	Assert(tile->pos == tilePos);
+	SetGroundWorldTile(world, tile, itemId);
+}
+void SetPlacedWorldTileAt(World_t* world, v2i tilePos, u16 itemId)
+{
+	NotNull(world);
+	WorldTile_t* tile = GetWorldTileAt(world, tilePos);
+	AssertMsg(tile != nullptr, "Tried to set tile outside the bounds of the world!");
+	Assert(tile->pos == tilePos);
+	SetPlacedWorldTile(world, tile, itemId);
 }
 
 v2 ResolveWorldTileCollisions(World_t* world, rec colRec)
@@ -173,16 +211,18 @@ void InitWorld(World_t* world, MemArena_t* memArena, v2i size, u64 seed)
 				ItemDef_t* spawnItemDef = GetRandomItemWithFlag(&gl->itemBook, ItemFlags_Surface|ItemFlags_Tile|ItemFlags_Decor);
 				if (spawnItemDef != nullptr) { generatedItemId = spawnItemDef->runtimeId; }
 			}
-			SetWorldTile(world, tile, generatedItemId);
+			SetGeneratedWorldTile(world, tile, generatedItemId);
+			SetGroundWorldTile(world, tile, ITEM_ID_NONE);
+			SetPlacedWorldTile(world, tile, ITEM_ID_NONE);
 		}
 	}
 	
 	v2i worldCenter = NewVec2i(world->size.width/2, world->size.height/2);
 	v2i storePos = worldCenter - Vec2i_One;
-	SetWorldTileAt(world, storePos + NewVec2i(0, 0), LookupRuntimeId(&gl->itemBook, NewStr("StoreTL")));
-	SetWorldTileAt(world, storePos + NewVec2i(1, 0), LookupRuntimeId(&gl->itemBook, NewStr("StoreTR")));
-	SetWorldTileAt(world, storePos + NewVec2i(0, 1), LookupRuntimeId(&gl->itemBook, NewStr("StoreBL")));
-	SetWorldTileAt(world, storePos + NewVec2i(1, 1), LookupRuntimeId(&gl->itemBook, NewStr("StoreBR")));
+	SetPlacedWorldTileAt(world, storePos + NewVec2i(0, 0), LookupRuntimeId(&gl->itemBook, NewStr("StoreTL")));
+	SetPlacedWorldTileAt(world, storePos + NewVec2i(1, 0), LookupRuntimeId(&gl->itemBook, NewStr("StoreTR")));
+	SetPlacedWorldTileAt(world, storePos + NewVec2i(0, 1), LookupRuntimeId(&gl->itemBook, NewStr("StoreBL")));
+	SetPlacedWorldTileAt(world, storePos + NewVec2i(1, 1), LookupRuntimeId(&gl->itemBook, NewStr("StoreBR")));
 }
 
 void UpdateWorld(World_t* world)
@@ -203,44 +243,55 @@ void RenderWorld(World_t* world, const Player_t* player)
 			v2i tilePos = NewVec2i(tilePosX, tilePosY);
 			WorldTile_t* tile = GetWorldTileAt(world, tilePos);
 			reci tileRec = NewReci(tilePosX * TILE_SIZE, tilePosY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-			v2i tileFrame = GetItemFrame(&gl->itemBook, tile->itemId);
-			if (tileFrame != INVALID_FRAME)
+			
+			v2i groundTileFrame = GetItemFrame(&gl->itemBook, tile->groundId);
+			if (groundTileFrame != INVALID_FRAME)
 			{
-				PdDrawSheetFrame(game->entitiesSheet, tileFrame, tileRec);
+				PdDrawSheetFrame(game->entitiesSheet, groundTileFrame, tileRec);
+			}
+			v2i generatedTileFrame = GetItemFrame(&gl->itemBook, tile->generatedId);
+			if (generatedTileFrame != INVALID_FRAME)
+			{
+				PdDrawSheetFrame(game->entitiesSheet, generatedTileFrame, tileRec);
+			}
+			v2i placedTileFrame = GetItemFrame(&gl->itemBook, tile->placedId);
+			if (placedTileFrame != INVALID_FRAME)
+			{
+				PdDrawSheetFrame(game->entitiesSheet, placedTileFrame, tileRec);
+			}
+			
+			bool isInventoryOpen = (game->openInventory != nullptr || game->openScrollInventory != nullptr);
+			if (player->targetTilePos == tilePos && !player->isMining && !isInventoryOpen)
+			{
+				ItemStack_t dropStack = GetItemDrop(&gl->itemBook, tile->generatedId);
+				InvType_t invType = GetItemInvType(&gl->itemBook, tile->placedId);
 				
-				bool isInventoryOpen = (game->openInventory != nullptr || game->openScrollInventory != nullptr);
-				if (player->targetTilePos == tilePos && !player->isMining && !isInventoryOpen)
+				if (dropStack.count > 0)
 				{
-					ItemStack_t dropStack = GetItemDrop(&gl->itemBook, tile->itemId);
-					InvType_t invType = GetItemInvType(&gl->itemBook, tile->itemId);
-					
-					if (dropStack.count > 0)
+					PdDrawRecOutline(tileRec, RoundR32i(Oscillate(1, 3, 1000)), true);
+				}
+				else if (invType != InvType_None)
+				{
+					if (invType == InvType_Store)
+					{
+						v2i storeOrigin = tilePos;
+						
+						WorldTile_t* upLeftTile = GetWorldTileAt(world, tilePos + NewVec2i(-1, -1));
+						WorldTile_t* leftTile = GetWorldTileAt(world, tilePos + NewVec2i(-1, 0));
+						WorldTile_t* upTile = GetWorldTileAt(world, tilePos + NewVec2i(0, -1));
+						if (upLeftTile != nullptr && GetItemInvType(&gl->itemBook, upLeftTile->placedId) == invType) { storeOrigin += NewVec2i(-1, -1); }
+						else if (leftTile != nullptr && GetItemInvType(&gl->itemBook, leftTile->placedId) == invType) { storeOrigin += NewVec2i(-1, 0); }
+						else if (upTile != nullptr && GetItemInvType(&gl->itemBook, upTile->placedId) == invType) { storeOrigin += NewVec2i(0, -1); }
+						
+						reci storeRec = NewReci(
+							Vec2iMultiply(storeOrigin, Vec2iFill(TILE_SIZE)),
+							TILE_SIZE*2, TILE_SIZE*2
+						);
+						PdDrawRecOutline(storeRec, RoundR32i(Oscillate(1, 3, 1000)), true);
+					}
+					else
 					{
 						PdDrawRecOutline(tileRec, RoundR32i(Oscillate(1, 3, 1000)), true);
-					}
-					else if (invType != InvType_None)
-					{
-						if (invType == InvType_Store)
-						{
-							v2i storeOrigin = tilePos;
-							
-							WorldTile_t* upLeftTile = GetWorldTileAt(world, tilePos + NewVec2i(-1, -1));
-							WorldTile_t* leftTile = GetWorldTileAt(world, tilePos + NewVec2i(-1, 0));
-							WorldTile_t* upTile = GetWorldTileAt(world, tilePos + NewVec2i(0, -1));
-							if (upLeftTile != nullptr && GetItemInvType(&gl->itemBook, upLeftTile->itemId) == invType) { storeOrigin += NewVec2i(-1, -1); }
-							else if (leftTile != nullptr && GetItemInvType(&gl->itemBook, leftTile->itemId) == invType) { storeOrigin += NewVec2i(-1, 0); }
-							else if (upTile != nullptr && GetItemInvType(&gl->itemBook, upTile->itemId) == invType) { storeOrigin += NewVec2i(0, -1); }
-							
-							reci storeRec = NewReci(
-								Vec2iMultiply(storeOrigin, Vec2iFill(TILE_SIZE)),
-								TILE_SIZE*2, TILE_SIZE*2
-							);
-							PdDrawRecOutline(storeRec, RoundR32i(Oscillate(1, 3, 1000)), true);
-						}
-						else
-						{
-							PdDrawRecOutline(tileRec, RoundR32i(Oscillate(1, 3, 1000)), true);
-						}
 					}
 				}
 			}

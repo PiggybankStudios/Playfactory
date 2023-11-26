@@ -34,6 +34,7 @@ struct Player_t
 	
 	Inventory_t inventory;
 	Inventory_t scienceInventory;
+	InvSlot_t* handSlot;
 	u64 beanCount;
 	
 	bool isMining;

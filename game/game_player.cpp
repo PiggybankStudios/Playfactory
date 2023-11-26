@@ -28,6 +28,10 @@ void InitPlayer(Player_t* player, MemArena_t* memArena, v2 startPos)
 	player->beanCount = 0;
 	InitInventory(&player->inventory, player->allocArena, InvType_PlayerInventory);
 	InitInventory(&player->scienceInventory, player->allocArena, InvType_PlayerScience);
+	player->handSlot = GetInvSlotByType(&player->scienceInventory, 0, InvSlotType_Hand);
+	NotNull(player->handSlot);
+	
+	TryAddItemStackToInventory(&player->inventory, NewItemStack(LookupRuntimeId(&gl->itemBook, NewStr("Pipe")), 8));
 }
 
 void UpdatePlayer(Player_t* player, World_t* world)
@@ -107,10 +111,10 @@ void UpdatePlayer(Player_t* player, World_t* world)
 	player->targetTile = GetWorldTileAt(world, player->targetTilePos);
 	
 	ItemStack_t targetDrop = {};
-	if (player->targetTile != nullptr) { targetDrop = GetItemDrop(&gl->itemBook, player->targetTile->itemId); }
+	if (player->targetTile != nullptr) { targetDrop = GetItemDrop(&gl->itemBook, player->targetTile->generatedId); }
 	
 	InvType_t targetInvType = InvType_None;
-	if (player->targetTile != nullptr) { targetInvType = GetItemInvType(&gl->itemBook, player->targetTile->itemId); }
+	if (player->targetTile != nullptr) { targetInvType = GetItemInvType(&gl->itemBook, player->targetTile->placedId); }
 	
 	if (targetDrop.count > 0 && targetDrop.id != ITEM_ID_NONE && !isInventoryOpen)
 	{
@@ -202,6 +206,18 @@ void UpdatePlayer(Player_t* player, World_t* world)
 void RenderPlayer(Player_t* player)
 {
 	NotNull2(player, player->allocArena);
+	reci targetTileRec = NewReci(player->targetTilePos.x * TILE_SIZE, player->targetTilePos.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+	
+	if (player->handSlot != nullptr && player->handSlot->stack.id != ITEM_ID_NONE && player->handSlot->stack.count > 0)
+	{
+		WorldTile_t* targetTile = GetWorldTileAt(&game->world, player->targetTilePos);
+		if (targetTile != nullptr && !targetTile->isSolid && targetTile->placedId == ITEM_ID_NONE)
+		{
+			v2i itemFrame = GetItemFrame(&gl->itemBook, player->handSlot->stack.id);
+			PdDrawRecOutline(targetTileRec, 2, true, kColorBlack);
+			PdDrawSheetFrame(game->entitiesSheet, itemFrame, targetTileRec);
+		}
+	}
 	
 	bool drawPlayer = true;
 	SpriteSheet_t* sheet = &game->playerSheet;
@@ -246,7 +262,7 @@ void RenderPlayer(Player_t* player)
 		PdDrawRec(NewReci(Vec2Roundi(player->colRec.topLeft), Vec2Roundi(player->colRec.size)), kColorBlack);
 		
 		PdDrawRec(NewReci(Vec2Roundi(player->targetPos), 2, 2), kColorBlack);
-		PdDrawRecOutline(NewReci(player->targetTilePos.x * TILE_SIZE, player->targetTilePos.y * TILE_SIZE, TILE_SIZE, TILE_SIZE), 1);
+		PdDrawRecOutline(targetTileRec, 1);
 		
 		PdSetDrawMode(oldDrawMode);
 	}
