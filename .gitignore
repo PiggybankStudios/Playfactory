@@ -7,3 +7,5 @@ engine/
 release/*
 !release/screenshots/
 src_content/
+lib/include/*
+!lib/include/README.txt
