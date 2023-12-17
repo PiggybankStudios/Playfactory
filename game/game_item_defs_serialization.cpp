@@ -33,6 +33,7 @@ void FinishItemDef(ProcessLog_t* log, ItemBook_t* bookOut, ItemDef_t* currentIte
 {
 	if (currentItem->runtimeId != 0)
 	{
+		LogPrintLine_D(log, "Finished item definition: %.*s \"%.*s\"", (u32)currentItem->idStr.length, currentItem->idStr.chars, (u32)currentItem->displayName.length, currentItem->displayName.chars);
 		AddItemDef(bookOut, currentItem);
 	}
 	ClearPointer(currentItem);
@@ -240,11 +241,11 @@ bool TryDeserItemBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* bookO
 					{
 						MyStr_t fileName = GetFileNamePart(oldFilePath);
 						MyStr_t includeFileName = GetFileNamePart(includePath);
-						LogPrintLine_D(log, "Successfully included %.*s from %.*s line %llu", includeFileName.length, includeFileName.chars, fileName.length, fileName.chars, textParser.lineParser.lineIndex);
+						LogPrintLine_D(log, "Successfully included %.*s from %.*s line %llu", (u32)includeFileName.length, includeFileName.chars, (u32)fileName.length, fileName.chars, textParser.lineParser.lineIndex);
 					}
 					else
 					{
-						LogPrintLine_W(log, "Included in %.*s line %llu", log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+						LogPrintLine_W(log, "Included in %.*s line %llu", (u32)log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
 						FreeScratchArena(scratch);
 						FreeScratchArena(scratch2);
 						return false;
@@ -320,7 +321,10 @@ bool TryLoadAllItemDefs(ItemBook_t* bookOut, MemArena_t* memArena)
 	NotNull2(bookOut, memArena);
 	MemArena_t* scratch = GetScratchArena(memArena);
 	ProcessLog_t deserLog;
-	CreateProcessLog(&deserLog, Kilobytes(64), scratch, scratch);
+	// CreateProcessLog(&deserLog, Kilobytes(64), scratch, scratch);
+	// void CreateProcessLogStub(ProcessLog_t* logOut)
+	CreateProcessLogStub(&deserLog); //TODO: Change me back!
+	ProcessLogRouteToDebugOutput(&deserLog, GyLibOutputHandler); //TODO: Remove me!
 	ItemBook_t tempBook;
 	bool deserSuccess = TryLoadItemBook(false, NewStr(ITEM_BOOK_PATH), &deserLog, &tempBook, scratch);
 	if (deserLog.hadErrors || deserLog.hadWarnings)

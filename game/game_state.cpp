@@ -220,7 +220,7 @@ void RenderAppState_Game(bool isOnTop)
 		PdDrawTextPrint(textPos, "ProgramTime: %u (%u)", ProgramTime, input->realProgramTime);
 		textPos.y += stepY;
 		
-		PdDrawTextPrint(textPos, "Target: (%g, %g) (%d, %d)", game->player.targetPos.x, game->player.targetPos.y, game->player.targetTilePos.x, game->player.targetTilePos.y);
+		PdDrawTextPrint(textPos, "Target: (%lg, %lg) (%d, %d)", (r64)game->player.targetPos.x, (r64)game->player.targetPos.y, game->player.targetTilePos.x, game->player.targetTilePos.y);
 		textPos.y += stepY;
 		
 		u64 numSoundInstances = 0;

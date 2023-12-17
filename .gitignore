@@ -2,6 +2,7 @@
 build/*
 !build/build.bat
 data/pdex.dll
+data/pdex.elf
 lib/include/gylib/
 engine/
 release/*

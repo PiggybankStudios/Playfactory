@@ -33,6 +33,12 @@ AppState_t InitGame()
 	gl = AllocStruct(fixedHeap, GameGlobals_t);
 	ClearPointer(gl);
 	gl->initialized = true;
+	
+	// +==================================+
+	// | Load Item Definitions at Startup |
+	// +==================================+
+	//TODO: Turn me back on!
+	#if 0
 	if (TryLoadAllItemDefs(&gl->itemBook, mainHeap))
 	{
 		#if 1
@@ -50,7 +56,17 @@ AppState_t InitGame()
 		DebugAssertMsg(false, "Failed to load items!");
 		//TODO: Should we do some sort of initialization failure?
 	}
+	#endif
 	
+	MyStr_t testStr = NewStr(5, PROJECT_NAME);
+	PrintLine_D("Testing .*s functionality 1: [%.*s]", StrPrint(testStr));
+	// PrintLine_D("Testing .*s functionality 2: [%.*s]", testStr.length, testStr.chars);
+	
+	// +====================================+
+	// | Load Recipe Definitions at Startup |
+	// +====================================+
+	//TODO: Turn me back on!
+	#if 0
 	if (TryLoadAllRecipes(&gl->itemBook, &gl->recipeBook, mainHeap))
 	{
 		#if 1
@@ -68,7 +84,7 @@ AppState_t InitGame()
 		DebugAssertMsg(false, "Failed to load recipes!");
 		//TODO: Should we do some sort of initialization failure?
 	}
-	
+	#endif
 	
 	gl->titleFont = LoadFont(NewStr(TITLE_FONT_PATH));
 	Assert(gl->titleFont.isValid);

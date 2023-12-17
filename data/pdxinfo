@@ -1,5 +1,7 @@
-name=Play-Factory
+name=Candy Crank: Sugar Supply
 author=Taylor Robbins
-description=A simple factory game
+description=A simple factory game about candy
 bundleID=com.piggybankstudios.playfactory
-imagePath=
+imagePath=Resources/launch_card.png
+version=0.2
+buildNumber=701
