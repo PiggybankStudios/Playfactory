@@ -44,13 +44,13 @@ bool TryDeserRecipeBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* ite
 	
 	if (fileContents.length < RECIPE_BOOK_FILE_PREFIX_LENGTH)
 	{
-		LogPrintLine_E(log, "File %.*s was only %llu bytes when we expected at least %u bytes for header", log->filePath.length, log->filePath.chars, fileContents.length, RECIPE_BOOK_FILE_PREFIX_LENGTH);
+		LogPrintLine_E(log, "File %.*s was only %llu bytes when we expected at least %u bytes for header", StrPrint(log->filePath), fileContents.length, RECIPE_BOOK_FILE_PREFIX_LENGTH);
 		LogExitFailure(log, TryDeserRecipeBookError_EmptyFile);
 		return false;
 	}
 	if (MyMemCompare(fileContents.chars, RECIPE_BOOK_FILE_PREFIX, RECIPE_BOOK_FILE_PREFIX_LENGTH) != 0)
 	{
-		LogPrintLine_E(log, "Invalid header found in file %.*s. Expected \"%s\"", log->filePath.length, log->filePath.chars, RECIPE_BOOK_FILE_PREFIX);
+		LogPrintLine_E(log, "Invalid header found in file %.*s. Expected \"%s\"", StrPrint(log->filePath), RECIPE_BOOK_FILE_PREFIX);
 		LogExitFailure(log, TryDeserRecipeBookError_MissingOrCorruptHeader);
 		return false;
 	}
@@ -92,7 +92,7 @@ bool TryDeserRecipeBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* ite
 						TrimWhitespace(&piece);
 						if (IsEmptyStr(piece))
 						{
-							LogPrintLine_W(log, "Empty piece found in Recipe definition in %.*s line %llu: %.*s", log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex, token.value.length, token.value.chars);
+							LogPrintLine_W(log, "Empty piece found in Recipe definition in %.*s line %llu: %.*s", StrPrint(log->filePath), textParser.lineParser.lineIndex, StrPrint(token.value));
 							log->hadWarnings = true;
 							break;
 						}
@@ -106,7 +106,7 @@ bool TryDeserRecipeBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* ite
 							}
 							else
 							{
-								LogPrintLine_W(log, "Unknown Item \"%.*s\" in %.*s line %llu in Recipe: %.*s", piece.length, piece.chars, log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex, token.value.length, token.value.chars);
+								LogPrintLine_W(log, "Unknown Item \"%.*s\" in %.*s line %llu in Recipe: %.*s", StrPrint(piece), StrPrint(log->filePath), textParser.lineParser.lineIndex, StrPrint(token.value));
 								log->hadWarnings = true;
 								break;
 							}
@@ -115,7 +115,7 @@ bool TryDeserRecipeBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* ite
 				}
 				else
 				{
-					LogPrintLine_W(log, "Too %s pieces in %.*s line %llu. Expected 3 pieces, not %llu", ((numPieces > 3) ? "many" : "few"), log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex, numPieces);
+					LogPrintLine_W(log, "Too %s pieces in %.*s line %llu. Expected 3 pieces, not %llu", ((numPieces > 3) ? "many" : "few"), StrPrint(log->filePath), textParser.lineParser.lineIndex, numPieces);
 					log->hadWarnings = true;
 				}
 				PopMemMark(scratch);
@@ -142,11 +142,11 @@ bool TryDeserRecipeBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* ite
 					{
 						MyStr_t fileName = GetFileNamePart(oldFilePath);
 						MyStr_t includeFileName = GetFileNamePart(includePath);
-						LogPrintLine_D(log, "Successfully included %.*s from %.*s line %llu", includeFileName.length, includeFileName.chars, fileName.length, fileName.chars, textParser.lineParser.lineIndex);
+						LogPrintLine_D(log, "Successfully included %.*s from %.*s line %llu", StrPrint(includeFileName), StrPrint(fileName), textParser.lineParser.lineIndex);
 					}
 					else
 					{
-						LogPrintLine_W(log, "Included in %.*s line %llu", log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+						LogPrintLine_W(log, "Included in %.*s line %llu", StrPrint(log->filePath), textParser.lineParser.lineIndex);
 						FreeScratchArena(scratch);
 						FreeScratchArena(scratch2);
 						return false;
@@ -155,7 +155,7 @@ bool TryDeserRecipeBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* ite
 				}
 				else
 				{
-					LogPrintLine_W(log, "WARNING: Failed to find/read/open Included file \"%.*s\" in %.*s line %llu", includePath.length, includePath.chars, log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+					LogPrintLine_W(log, "WARNING: Failed to find/read/open Included file \"%.*s\" in %.*s line %llu", StrPrint(includePath), StrPrint(log->filePath), textParser.lineParser.lineIndex);
 				}
 				FreeScratchArena(scratch2);
 			}
@@ -164,7 +164,7 @@ bool TryDeserRecipeBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* ite
 			// +==============================+
 			else
 			{
-				LogPrintLine_W(log, "WARNING: Unknown key in %.*s line %llu: \"%.*s\"", log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex, token.key.length, token.key.chars);
+				LogPrintLine_W(log, "WARNING: Unknown key in %.*s line %llu: \"%.*s\"", StrPrint(log->filePath), textParser.lineParser.lineIndex, StrPrint(token.key));
 				log->hadWarnings = true;
 			}
 		}
@@ -174,12 +174,12 @@ bool TryDeserRecipeBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* ite
 		}
 		else if (token.type == ParsingTokenType_Unknown)
 		{
-			LogPrintLine_W(log, "WARNING: Unknown syntax in %.*s line %llu: \"%.*s\"", log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex, token.str.length, token.str.chars);
+			LogPrintLine_W(log, "WARNING: Unknown syntax in %.*s line %llu: \"%.*s\"", StrPrint(log->filePath), textParser.lineParser.lineIndex, StrPrint(token.str));
 			log->hadWarnings = true;
 		}
 		else
 		{
-			LogPrintLine_W(log, "WARNING: Unhandled token type %s in %.*s line %llu: \"%.*s\"", GetParsingTokenTypeStr(token.type), log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex, token.str.length, token.str.chars);
+			LogPrintLine_W(log, "WARNING: Unhandled token type %s in %.*s line %llu: \"%.*s\"", GetParsingTokenTypeStr(token.type), StrPrint(log->filePath), textParser.lineParser.lineIndex, StrPrint(token.str));
 			log->hadWarnings = true;
 		}
 	}
@@ -206,7 +206,7 @@ bool TryLoadRecipeBook(bool fromDataDir, MyStr_t filePath, ProcessLog_t* log, It
 	}
 	else
 	{
-		LogPrintLine_E(log, "Failed to open file at \"%.*s\"", filePath.length, filePath.chars);
+		LogPrintLine_E(log, "Failed to open file at \"%.*s\"", StrPrint(filePath));
 		LogExitFailure(log, TryDeserRecipeBookError_CouldntOpenFile);
 	}
 	

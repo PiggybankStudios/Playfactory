@@ -38,7 +38,7 @@ AppState_t InitGame()
 	// | Load Item Definitions at Startup |
 	// +==================================+
 	//TODO: Turn me back on!
-	#if 0
+	#if 1
 	if (TryLoadAllItemDefs(&gl->itemBook, mainHeap))
 	{
 		#if 1
@@ -46,7 +46,7 @@ AppState_t InitGame()
 		VarArrayLoop(&gl->itemBook.items, iIndex)
 		{
 			VarArrayLoopGet(ItemDef_t, item, &gl->itemBook.items, iIndex);
-			PrintLine_D("ItemDef[%llu]: %u %.*s %04X", iIndex, item->runtimeId, item->idStr.length, item->idStr.chars, item->flags);
+			PrintLine_D("ItemDef[%llu]: %u %.*s %04X", iIndex, item->runtimeId, StrPrint(item->idStr), item->flags);
 		}
 		#endif
 	}
@@ -58,15 +58,11 @@ AppState_t InitGame()
 	}
 	#endif
 	
-	MyStr_t testStr = NewStr(5, PROJECT_NAME);
-	PrintLine_D("Testing .*s functionality 1: [%.*s]", StrPrint(testStr));
-	// PrintLine_D("Testing .*s functionality 2: [%.*s]", testStr.length, testStr.chars);
-	
 	// +====================================+
 	// | Load Recipe Definitions at Startup |
 	// +====================================+
 	//TODO: Turn me back on!
-	#if 0
+	#if 1
 	if (TryLoadAllRecipes(&gl->itemBook, &gl->recipeBook, mainHeap))
 	{
 		#if 1

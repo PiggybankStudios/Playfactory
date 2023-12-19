@@ -6,7 +6,7 @@ set ProjectNameSafe=Playfactory
 
 set DebugBuild=1
 set DeveloperBuild=1
-set SimulatorBuild=0
+set SimulatorBuild=1
 set DemoBuild=0
 set AssertionsEnabled=1
 

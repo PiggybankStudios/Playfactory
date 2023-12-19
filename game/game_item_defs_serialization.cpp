@@ -33,7 +33,7 @@ void FinishItemDef(ProcessLog_t* log, ItemBook_t* bookOut, ItemDef_t* currentIte
 {
 	if (currentItem->runtimeId != 0)
 	{
-		LogPrintLine_D(log, "Finished item definition: %.*s \"%.*s\"", (u32)currentItem->idStr.length, currentItem->idStr.chars, (u32)currentItem->displayName.length, currentItem->displayName.chars);
+		LogPrintLine_D(log, "Finished item definition: %.*s \"%.*s\"", StrPrint(currentItem->idStr), StrPrint(currentItem->displayName));
 		AddItemDef(bookOut, currentItem);
 	}
 	ClearPointer(currentItem);
@@ -56,13 +56,13 @@ bool TryDeserItemBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* bookO
 	
 	if (fileContents.length < ITEM_BOOK_FILE_PREFIX_LENGTH)
 	{
-		LogPrintLine_E(log, "File %.*s was only %llu bytes when we expected at least %u bytes for header", log->filePath.length, log->filePath.chars, fileContents.length, ITEM_BOOK_FILE_PREFIX_LENGTH);
+		LogPrintLine_E(log, "File %.*s was only %llu bytes when we expected at least %u bytes for header", StrPrint(log->filePath), fileContents.length, ITEM_BOOK_FILE_PREFIX_LENGTH);
 		LogExitFailure(log, TryDeserItemBookError_EmptyFile);
 		return false;
 	}
 	if (MyMemCompare(fileContents.chars, ITEM_BOOK_FILE_PREFIX, ITEM_BOOK_FILE_PREFIX_LENGTH) != 0)
 	{
-		LogPrintLine_E(log, "Invalid header found in file %.*s. Expected \"%s\"", log->filePath.length, log->filePath.chars, ITEM_BOOK_FILE_PREFIX);
+		LogPrintLine_E(log, "Invalid header found in file %.*s. Expected \"%s\"", StrPrint(log->filePath), ITEM_BOOK_FILE_PREFIX);
 		LogExitFailure(log, TryDeserItemBookError_MissingOrCorruptHeader);
 		return false;
 	}
@@ -92,7 +92,7 @@ bool TryDeserItemBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* bookO
 				!StrEqualsIgnoreCase(token.key, "Include") &&
 				!StrEqualsIgnoreCase(token.key, "Item"))
 			{
-				LogPrintLine_W(log, "Got key \"%.*s\" BEFORE \"Item\" was declared in %.*s line %llu", token.key.length, token.key.chars, log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+				LogPrintLine_W(log, "Got key \"%.*s\" BEFORE \"Item\" was declared in %.*s line %llu", StrPrint(token.key), StrPrint(log->filePath), textParser.lineParser.lineIndex);
 				log->hadWarnings = true;
 				continue;
 			}
@@ -107,7 +107,7 @@ bool TryDeserItemBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* bookO
 				ItemDef_t* existingItem = FindItemDef(bookOut, token.value);
 				if (existingItem != nullptr)
 				{
-					LogPrintLine_W(log, "Duplicate ItemId \"%.*s\" in %.*s line %llu", token.value.length, token.value.chars, log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+					LogPrintLine_W(log, "Duplicate ItemId \"%.*s\" in %.*s line %llu", StrPrint(token.value), StrPrint(log->filePath), textParser.lineParser.lineIndex);
 					log->hadWarnings = true;
 				}
 				else
@@ -136,7 +136,7 @@ bool TryDeserItemBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* bookO
 					}
 					else
 					{
-						LogPrintLine_W(log, "Unknown flag \"%.*s\" on Item \"%.*s\" in %.*s line %llu", piece.length, piece.chars, currentItem.idStr.length, currentItem.idStr.chars, log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+						LogPrintLine_W(log, "Unknown flag \"%.*s\" on Item \"%.*s\" in %.*s line %llu", StrPrint(piece), StrPrint(currentItem.idStr), StrPrint(log->filePath), textParser.lineParser.lineIndex);
 						log->hadWarnings = true;
 					}
 				}
@@ -155,7 +155,7 @@ bool TryDeserItemBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* bookO
 				}
 				else
 				{
-					LogPrintLine_W(log, "Expected %u, comma separated, names for Display: \"%.*s\" in %.*s line %llu", ArrayCount(pieces), token.value.length, token.value.chars, log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+					LogPrintLine_W(log, "Expected %u, comma separated, names for Display: \"%.*s\" in %.*s line %llu", ArrayCount(pieces), StrPrint(token.value), StrPrint(log->filePath), textParser.lineParser.lineIndex);
 					log->hadWarnings = true;
 				}
 			}
@@ -171,12 +171,12 @@ bool TryDeserItemBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* bookO
 					u8 dropCount = 0;
 					if (dropItemDef == nullptr)
 					{
-						LogPrintLine_W(log, "Unknown item \"%.*s\" for Drop on \"%.*s\" in %.*s line %llu", pieces[0].length, pieces[0].chars, currentItem.idStr.length, currentItem.idStr.chars, log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+						LogPrintLine_W(log, "Unknown item \"%.*s\" for Drop on \"%.*s\" in %.*s line %llu", StrPrint(pieces[0]), StrPrint(currentItem.idStr), StrPrint(log->filePath), textParser.lineParser.lineIndex);
 						log->hadWarnings = true;
 					}
 					else if (!TryParseU8(pieces[1], &dropCount, &parseFailureReason))
 					{
-						LogPrintLine_W(log, "Couldn't parse Drop count as u8: \"%.*s\" on \"%.*s\" in %.*s line %llu", pieces[1].length, pieces[1].chars, currentItem.idStr.length, currentItem.idStr.chars, log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+						LogPrintLine_W(log, "Couldn't parse Drop count as u8: \"%.*s\" on \"%.*s\" in %.*s line %llu", StrPrint(pieces[1]), StrPrint(currentItem.idStr), StrPrint(log->filePath), textParser.lineParser.lineIndex);
 						log->hadWarnings = true;
 					}
 					else
@@ -187,7 +187,7 @@ bool TryDeserItemBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* bookO
 				}
 				else
 				{
-					LogPrintLine_W(log, "Expected %u, comma separated, names for Drop: \"%.*s\" in %.*s line %llu", ArrayCount(pieces), token.value.length, token.value.chars, log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+					LogPrintLine_W(log, "Expected %u, comma separated, names for Drop: \"%.*s\" in %.*s line %llu", ArrayCount(pieces), StrPrint(token.value), StrPrint(log->filePath), textParser.lineParser.lineIndex);
 					log->hadWarnings = true;
 				}
 			}
@@ -198,7 +198,7 @@ bool TryDeserItemBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* bookO
 			{
 				if (!TryParseV2i(token.value, &currentItem.frame, &parseFailureReason))
 				{
-					LogPrintLine_W(log, "Couldn't parse Frame \"%.*s\" as vec2i (%s) in %.*s line %llu", token.value.length, token.value.chars, GetTryParseFailureReasonStr(parseFailureReason), log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+					LogPrintLine_W(log, "Couldn't parse Frame \"%.*s\" as vec2i (%s) in %.*s line %llu", StrPrint(token.value), GetTryParseFailureReasonStr(parseFailureReason), StrPrint(log->filePath), textParser.lineParser.lineIndex);
 					log->hadWarnings = true;
 				}
 			}
@@ -209,7 +209,7 @@ bool TryDeserItemBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* bookO
 			{
 				if (!TryParseU8(token.value, &currentItem.value, &parseFailureReason))
 				{
-					LogPrintLine_W(log, "Couldn't parse Cost \"%.*s\" as u8 (%s) in %.*s line %llu", token.value.length, token.value.chars, GetTryParseFailureReasonStr(parseFailureReason), log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+					LogPrintLine_W(log, "Couldn't parse Cost \"%.*s\" as u8 (%s) in %.*s line %llu", StrPrint(token.value), GetTryParseFailureReasonStr(parseFailureReason), StrPrint(log->filePath), textParser.lineParser.lineIndex);
 					log->hadWarnings = true;
 				}
 			}
@@ -220,7 +220,7 @@ bool TryDeserItemBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* bookO
 			{
 				if (!TryParseEnum(token.value, &currentItem.inventoryType, InvType_NumTypes, GetInvTypeStr, &parseFailureReason))
 				{
-					LogPrintLine_W(log, "Unknown Inventory type \"%.*s\" in %.*s line %llu", token.value.length, token.value.chars, log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+					LogPrintLine_W(log, "Unknown Inventory type \"%.*s\" in %.*s line %llu", StrPrint(token.value), StrPrint(log->filePath), textParser.lineParser.lineIndex);
 					log->hadWarnings = true;
 				}
 			}
@@ -241,11 +241,11 @@ bool TryDeserItemBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* bookO
 					{
 						MyStr_t fileName = GetFileNamePart(oldFilePath);
 						MyStr_t includeFileName = GetFileNamePart(includePath);
-						LogPrintLine_D(log, "Successfully included %.*s from %.*s line %llu", (u32)includeFileName.length, includeFileName.chars, (u32)fileName.length, fileName.chars, textParser.lineParser.lineIndex);
+						LogPrintLine_D(log, "Successfully included %.*s from %.*s line %llu", StrPrint(includeFileName), (u32)fileName.length, fileName.chars, textParser.lineParser.lineIndex);
 					}
 					else
 					{
-						LogPrintLine_W(log, "Included in %.*s line %llu", (u32)log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+						LogPrintLine_W(log, "Included in %.*s line %llu", (u32)StrPrint(log->filePath), textParser.lineParser.lineIndex);
 						FreeScratchArena(scratch);
 						FreeScratchArena(scratch2);
 						return false;
@@ -254,7 +254,7 @@ bool TryDeserItemBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* bookO
 				}
 				else
 				{
-					LogPrintLine_W(log, "WARNING: Failed to find/read/open Included file \"%.*s\" in %.*s line %llu", includePath.length, includePath.chars, log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex);
+					LogPrintLine_W(log, "WARNING: Failed to find/read/open Included file \"%.*s\" in %.*s line %llu", StrPrint(includePath), StrPrint(log->filePath), textParser.lineParser.lineIndex);
 				}
 				FreeScratchArena(scratch2);
 			}
@@ -263,7 +263,7 @@ bool TryDeserItemBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* bookO
 			// +==============================+
 			else
 			{
-				LogPrintLine_W(log, "WARNING: Unknown key in %.*s line %llu: \"%.*s\"", log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex, token.key.length, token.key.chars);
+				LogPrintLine_W(log, "WARNING: Unknown key in %.*s line %llu: \"%.*s\"", StrPrint(log->filePath), textParser.lineParser.lineIndex, StrPrint(token.key));
 				log->hadWarnings = true;
 			}
 		}
@@ -273,12 +273,12 @@ bool TryDeserItemBook(MyStr_t fileContents, ProcessLog_t* log, ItemBook_t* bookO
 		}
 		else if (token.type == ParsingTokenType_Unknown)
 		{
-			LogPrintLine_W(log, "WARNING: Unknown syntax in %.*s line %llu: \"%.*s\"", log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex, token.str.length, token.str.chars);
+			LogPrintLine_W(log, "WARNING: Unknown syntax in %.*s line %llu: \"%.*s\"", StrPrint(log->filePath), textParser.lineParser.lineIndex, StrPrint(token.str));
 			log->hadWarnings = true;
 		}
 		else
 		{
-			LogPrintLine_W(log, "WARNING: Unhandled token type %s in %.*s line %llu: \"%.*s\"", GetParsingTokenTypeStr(token.type), log->filePath.length, log->filePath.chars, textParser.lineParser.lineIndex, token.str.length, token.str.chars);
+			LogPrintLine_W(log, "WARNING: Unhandled token type %s in %.*s line %llu: \"%.*s\"", GetParsingTokenTypeStr(token.type), StrPrint(log->filePath), textParser.lineParser.lineIndex, StrPrint(token.str));
 			log->hadWarnings = true;
 		}
 	}
@@ -307,7 +307,7 @@ bool TryLoadItemBook(bool fromDataDir, MyStr_t filePath, ProcessLog_t* log, Item
 	}
 	else
 	{
-		LogPrintLine_E(log, "Failed to open file at \"%.*s\"", filePath.length, filePath.chars);
+		LogPrintLine_E(log, "Failed to open file at \"%.*s\"", StrPrint(filePath));
 		LogExitFailure(log, TryDeserItemBookError_CouldntOpenFile);
 	}
 	
