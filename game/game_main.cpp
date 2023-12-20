@@ -37,12 +37,10 @@ AppState_t InitGame()
 	// +==================================+
 	// | Load Item Definitions at Startup |
 	// +==================================+
-	//TODO: Turn me back on!
-	#if 1
 	if (TryLoadAllItemDefs(&gl->itemBook, mainHeap))
 	{
-		#if 1
 		PrintLine_D("There %s %llu item%s in the game", PluralEx(gl->itemBook.items.length, "is", "are"), gl->itemBook.items.length, Plural(gl->itemBook.items.length, "s"));
+		#if 1
 		VarArrayLoop(&gl->itemBook.items, iIndex)
 		{
 			VarArrayLoopGet(ItemDef_t, item, &gl->itemBook.items, iIndex);
@@ -56,17 +54,14 @@ AppState_t InitGame()
 		DebugAssertMsg(false, "Failed to load items!");
 		//TODO: Should we do some sort of initialization failure?
 	}
-	#endif
 	
 	// +====================================+
 	// | Load Recipe Definitions at Startup |
 	// +====================================+
-	//TODO: Turn me back on!
-	#if 1
 	if (TryLoadAllRecipes(&gl->itemBook, &gl->recipeBook, mainHeap))
 	{
-		#if 1
 		PrintLine_D("There %s %llu recipe%s in the game", PluralEx(gl->recipeBook.recipes.length, "is", "are"), gl->recipeBook.recipes.length, Plural(gl->recipeBook.recipes.length, "s"));
+		#if 1
 		VarArrayLoop(&gl->recipeBook.recipes, rIndex)
 		{
 			VarArrayLoopGet(Recipe_t, recipe, &gl->recipeBook.recipes, rIndex);
@@ -80,7 +75,6 @@ AppState_t InitGame()
 		DebugAssertMsg(false, "Failed to load recipes!");
 		//TODO: Should we do some sort of initialization failure?
 	}
-	#endif
 	
 	gl->titleFont = LoadFont(NewStr(TITLE_FONT_PATH));
 	Assert(gl->titleFont.isValid);

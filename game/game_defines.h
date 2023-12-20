@@ -18,8 +18,7 @@ Date:   10\27\2023
 #define DEFAULT_WORLD_SEED     1
 #define GAME_MAX_NUM_PARTICLES 300
 
-// #define FIRST_APP_STATE   AppState_MainMenu
-#define FIRST_APP_STATE   AppState_None //TODO: Change me back!
+#define FIRST_APP_STATE   AppState_MainMenu
 #define RECIPE_BOOK_PATH  "Resources/Text/recipes.txt"
 #define ITEM_BOOK_PATH    "Resources/Text/items.txt"
 

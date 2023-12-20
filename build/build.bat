@@ -7,6 +7,7 @@ set ProjectNameSafe=Playfactory
 set DebugBuild=1
 set DeveloperBuild=1
 set SimulatorBuild=1
+set BuildBoth=0
 set DemoBuild=0
 set AssertionsEnabled=1
 
@@ -56,7 +57,9 @@ if errorlevel 1 (
 del *.pdb > NUL 2> NUL
 del *.obj > NUL 2> NUL
 
-if "%SimulatorBuild%"=="1" (
+if "%BuildBoth%"=="1" (
+	goto CompileForSimulator
+) else if "%SimulatorBuild%"=="1" (
 	goto CompileForSimulator
 ) else (
 	goto CompileForDevice
@@ -116,7 +119,11 @@ cl /Fo"%OutputObjName%" %CompilerFlags% %IncludeDirectories% /c "%MainSourcePath
 LINK %LinkerFlags% %Libraries% "%OutputObjName%" /OUT:"%OutputDllName%" /IMPLIB:"%OutputLibName%" /PDB:"%OutputPdbName%"
 XCOPY ".\%OutputDllName%" "%DataDirectory%\" /Y > NUL
 
-goto PackageGame
+if "%BuildBoth%"=="1" (
+	goto CompileForDevice
+) else (
+	goto PackageGame
+)
 
 rem +--------------------------------------------------------------+
 rem |                       CompileForDevice                       |
@@ -134,7 +141,6 @@ rem -specs=nosys.specs = ?
 set SharedFlags=%SharedFlags% -mthumb -mcpu=%PlaydateChip% -mfloat-abi=hard -mfpu=fpv5-sp-d16 -D__FPU_USED=1 -specs=nano.specs -specs=nosys.specs
 set CompilerFlags=-D "PLAYDATE_COMPILATION" -D "PLAYDATE_DEVICE" -D "PROJECT_NAME=\"%ProjectName%\"" -D "PROJECT_NAME_SAFE=\"%ProjectNameSafe%\"" -D "DEBUG_BUILD=%DebugBuild%" -D "DEVELOPER_BUILD=%DeveloperBuild%" -D "DEMO_BUILD=%DemoBuild%" -D "STEAM_BUILD=0" -D "PROCMON_SUPPORTED=0" -D "SOCKETS_SUPPORTED=0" -D "BOX2D_SUPPORTED=0" -D "OPENGL_SUPPORTED=0" -D "VULKAN_SUPPORTED=0" -D "DIRECTX_SUPPORTED=0" -D "SLUG_SUPPORTED=0" -D "JSON_SUPPORTED=0" -D "ASSERTIONS_ENABLED=%AssertionsEnabled%"
 rem -g3 = Produce debugging information in the operating system's native format (3 = ?)
-rem -O2 = Optimize even more. GCC performs nearly all supported optimizations that do not involve a space-speed tradeoff. (from OPT)
 rem -std=gnu11 = ? (Removed, because we are compiling C++, not C)
 rem -MD = (MSVC Option) Use the multithread-specific and DLL-specific version of the run-time library
 rem -MT = (MSVC Option) Use the multithread, static version of the run-time library
@@ -142,7 +148,7 @@ rem -MP = This option instructs CPP to add a phony target for each dependency ot
 rem       ==OR== (MSVC Option) Build multiple source files concurrently (removed)
 rem -MF = When used with the driver options -MD or -MMD, -MF overrides the default dependency output file
 rem -gdwarf-2 = Produce debugging information in DWARF version 2 format (if that is supported). This is the format used by DBX on IRIX 6. With this option, GCC uses features of DWARF version 3 when they are useful; version 3 is upward compatible with version 2, but may still cause problems for older debuggers.
-set CompilerFlags=%CompilerFlags% -g3 -O2 -MD -MF %ProjectNameSafe%.d -gdwarf-2
+set CompilerFlags=%CompilerFlags% -g3 -MD -MF %ProjectNameSafe%.d -gdwarf-2
 rem -fverbose-asm = ?
 rem -fno-common = ?
 rem -falign-functions = ? (from OPT)
@@ -178,6 +184,15 @@ set LinkerFlags=-nostartfiles --entry eventHandlerShim -Wl,-Map=%OutputMapName%,
 set LinkerFlags=%LinkerFlags% -T%PlaydateSdkDirectory%\C_API\buildsupport\link_map.ld
 rem -lsupc++ ?
 set Libraries=
+
+if "%DebugBuild%"=="1" (
+	rem -O2 = No optimizations?
+	set CompilerFlags=%CompilerFlags% -Og
+) else if "%DebugBuild%"=="1" (
+	rem TODO: Change this back to -O2 once we figure out why it's causing problems!
+	rem -O2 = Optimize even more. GCC performs nearly all supported optimizations that do not involve a space-speed tradeoff. (from OPT)
+	set CompilerFlags=%CompilerFlags% -O1
+)
 
 echo [Compiling...]
 %ArmCompilerExeName% -c "%MainSourcePath%" -o "%OutputObjName%" %SharedFlags% %CompilerFlags% %IncludeDirectories%

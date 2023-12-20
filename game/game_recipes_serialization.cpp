@@ -220,7 +220,13 @@ bool TryLoadAllRecipes(ItemBook_t* itemBook, RecipeBook_t* bookOut, MemArena_t* 
 	NotNull2(bookOut, memArena);
 	MemArena_t* scratch = GetScratchArena(memArena);
 	ProcessLog_t deserLog;
+	#if PLAYDATE_SIMULATOR
 	CreateProcessLog(&deserLog, Kilobytes(64), scratch, scratch);
+	#else
+	//TODO: Once the ProcessLog_t supports aligned structures only, then we can switch back to using it on the playdate hardware!
+	CreateProcessLogStub(&deserLog);
+	// ProcessLogRouteToDebugOutput(&deserLog, GyLibOutputHandler);
+	#endif
 	RecipeBook_t tempBook;
 	bool deserSuccess = TryLoadRecipeBook(false, NewStr(RECIPE_BOOK_PATH), &deserLog, itemBook, &tempBook, scratch);
 	if (deserLog.hadErrors || deserLog.hadWarnings)

@@ -232,7 +232,7 @@ void UpdateWorld(World_t* world)
 	//TODO: Implement me!
 }
 
-void RenderWorld(World_t* world, const Player_t* player)
+void RenderWorld(World_t* world, const Player_t* player, reci viewRec)
 {
 	NotNull2(world, world->allocArena);
 	
@@ -243,55 +243,57 @@ void RenderWorld(World_t* world, const Player_t* player)
 			v2i tilePos = NewVec2i(tilePosX, tilePosY);
 			WorldTile_t* tile = GetWorldTileAt(world, tilePos);
 			reci tileRec = NewReci(tilePosX * TILE_SIZE, tilePosY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-			
-			v2i groundTileFrame = GetItemFrame(&gl->itemBook, tile->groundId);
-			if (groundTileFrame != INVALID_FRAME)
+			if (RecisIntersect(tileRec, viewRec))
 			{
-				PdDrawSheetFrame(game->entitiesSheet, groundTileFrame, tileRec);
-			}
-			v2i generatedTileFrame = GetItemFrame(&gl->itemBook, tile->generatedId);
-			if (generatedTileFrame != INVALID_FRAME)
-			{
-				PdDrawSheetFrame(game->entitiesSheet, generatedTileFrame, tileRec);
-			}
-			v2i placedTileFrame = GetItemFrame(&gl->itemBook, tile->placedId);
-			if (placedTileFrame != INVALID_FRAME)
-			{
-				PdDrawSheetFrame(game->entitiesSheet, placedTileFrame, tileRec);
-			}
-			
-			bool isInventoryOpen = (game->openInventory != nullptr || game->openScrollInventory != nullptr);
-			if (player->targetTilePos == tilePos && !player->isMining && !isInventoryOpen)
-			{
-				ItemStack_t dropStack = GetItemDrop(&gl->itemBook, tile->generatedId);
-				InvType_t invType = GetItemInvType(&gl->itemBook, tile->placedId);
-				
-				if (dropStack.count > 0)
+				v2i groundTileFrame = GetItemFrame(&gl->itemBook, tile->groundId);
+				if (groundTileFrame != INVALID_FRAME)
 				{
-					PdDrawRecOutline(tileRec, RoundR32i(Oscillate(1, 3, 1000)), true);
+					PdDrawSheetFrame(game->entitiesSheet, groundTileFrame, tileRec);
 				}
-				else if (invType != InvType_None)
+				v2i generatedTileFrame = GetItemFrame(&gl->itemBook, tile->generatedId);
+				if (generatedTileFrame != INVALID_FRAME)
 				{
-					if (invType == InvType_Store)
-					{
-						v2i storeOrigin = tilePos;
-						
-						WorldTile_t* upLeftTile = GetWorldTileAt(world, tilePos + NewVec2i(-1, -1));
-						WorldTile_t* leftTile = GetWorldTileAt(world, tilePos + NewVec2i(-1, 0));
-						WorldTile_t* upTile = GetWorldTileAt(world, tilePos + NewVec2i(0, -1));
-						if (upLeftTile != nullptr && GetItemInvType(&gl->itemBook, upLeftTile->placedId) == invType) { storeOrigin += NewVec2i(-1, -1); }
-						else if (leftTile != nullptr && GetItemInvType(&gl->itemBook, leftTile->placedId) == invType) { storeOrigin += NewVec2i(-1, 0); }
-						else if (upTile != nullptr && GetItemInvType(&gl->itemBook, upTile->placedId) == invType) { storeOrigin += NewVec2i(0, -1); }
-						
-						reci storeRec = NewReci(
-							Vec2iMultiply(storeOrigin, Vec2iFill(TILE_SIZE)),
-							TILE_SIZE*2, TILE_SIZE*2
-						);
-						PdDrawRecOutline(storeRec, RoundR32i(Oscillate(1, 3, 1000)), true);
-					}
-					else
+					PdDrawSheetFrame(game->entitiesSheet, generatedTileFrame, tileRec);
+				}
+				v2i placedTileFrame = GetItemFrame(&gl->itemBook, tile->placedId);
+				if (placedTileFrame != INVALID_FRAME)
+				{
+					PdDrawSheetFrame(game->entitiesSheet, placedTileFrame, tileRec);
+				}
+				
+				bool isInventoryOpen = (game->openInventory != nullptr || game->openScrollInventory != nullptr);
+				if (player->targetTilePos == tilePos && !player->isMining && !isInventoryOpen)
+				{
+					ItemStack_t dropStack = GetItemDrop(&gl->itemBook, tile->generatedId);
+					InvType_t invType = GetItemInvType(&gl->itemBook, tile->placedId);
+					
+					if (dropStack.count > 0)
 					{
 						PdDrawRecOutline(tileRec, RoundR32i(Oscillate(1, 3, 1000)), true);
+					}
+					else if (invType != InvType_None)
+					{
+						if (invType == InvType_Store)
+						{
+							v2i storeOrigin = tilePos;
+							
+							WorldTile_t* upLeftTile = GetWorldTileAt(world, tilePos + NewVec2i(-1, -1));
+							WorldTile_t* leftTile = GetWorldTileAt(world, tilePos + NewVec2i(-1, 0));
+							WorldTile_t* upTile = GetWorldTileAt(world, tilePos + NewVec2i(0, -1));
+							if (upLeftTile != nullptr && GetItemInvType(&gl->itemBook, upLeftTile->placedId) == invType) { storeOrigin += NewVec2i(-1, -1); }
+							else if (leftTile != nullptr && GetItemInvType(&gl->itemBook, leftTile->placedId) == invType) { storeOrigin += NewVec2i(-1, 0); }
+							else if (upTile != nullptr && GetItemInvType(&gl->itemBook, upTile->placedId) == invType) { storeOrigin += NewVec2i(0, -1); }
+							
+							reci storeRec = NewReci(
+								Vec2iMultiply(storeOrigin, Vec2iFill(TILE_SIZE)),
+								TILE_SIZE*2, TILE_SIZE*2
+							);
+							PdDrawRecOutline(storeRec, RoundR32i(Oscillate(1, 3, 1000)), true);
+						}
+						else
+						{
+							PdDrawRecOutline(tileRec, RoundR32i(Oscillate(1, 3, 1000)), true);
+						}
 					}
 				}
 			}

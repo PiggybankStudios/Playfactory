@@ -321,10 +321,13 @@ bool TryLoadAllItemDefs(ItemBook_t* bookOut, MemArena_t* memArena)
 	NotNull2(bookOut, memArena);
 	MemArena_t* scratch = GetScratchArena(memArena);
 	ProcessLog_t deserLog;
-	// CreateProcessLog(&deserLog, Kilobytes(64), scratch, scratch);
-	// void CreateProcessLogStub(ProcessLog_t* logOut)
-	CreateProcessLogStub(&deserLog); //TODO: Change me back!
-	ProcessLogRouteToDebugOutput(&deserLog, GyLibOutputHandler); //TODO: Remove me!
+	#if PLAYDATE_SIMULATOR
+	CreateProcessLog(&deserLog, Kilobytes(64), scratch, scratch);
+	#else
+	//TODO: Once the ProcessLog_t supports aligned structures only, then we can switch back to using it on the playdate hardware!
+	CreateProcessLogStub(&deserLog);
+	// ProcessLogRouteToDebugOutput(&deserLog, GyLibOutputHandler);
+	#endif
 	ItemBook_t tempBook;
 	bool deserSuccess = TryLoadItemBook(false, NewStr(ITEM_BOOK_PATH), &deserLog, &tempBook, scratch);
 	if (deserLog.hadErrors || deserLog.hadWarnings)

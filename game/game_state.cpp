@@ -170,7 +170,7 @@ void RenderAppState_Game(bool isOnTop)
 		PdSetRenderOffset(-game->view.worldReci.topLeft);
 		
 		RenderParticleSystem(&game->parts, PartLayer_Low);
-		RenderWorld(&game->world, &game->player);
+		RenderWorld(&game->world, &game->player, game->view.worldReci);
 		RenderPlayer(&game->player);
 		RenderParticleSystem(&game->parts, PartLayer_High);
 		
